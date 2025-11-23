@@ -1,12 +1,17 @@
 # Chinese Learning App Walkthrough
 
-I have updated the application to fetch data dynamically, improved font rendering, enhanced TTS quality using a proxy, and optimized the layout for mobile devices.
+I have updated the application to fetch data dynamically, improved font rendering, styled the Pinyin, implemented exclusive audio playback, and added a feature to add new words.
 
 ## Updates
 - **Dynamic Data**: The app fetches vocabulary directly from your Google Sheet via `/api/words`.
+- **Add Word Feature**: A new page (`/add`) allows you to add new words. These are saved locally and merged with the Google Sheet data.
 - **Font Improvement**: Added `Noto Sans SC` font for correct Pinyin rendering.
-- **Better Audio**: Switched to Google Translate TTS API via a local proxy (`/api/tts`) to ensure reliable playback and accurate pronunciation.
-- **Responsive Design**: Adjusted font sizes and padding to look great on all screen sizes (mobile, tablet, desktop).
+- **Pinyin Styling**: Pinyin text now uses **Arial font** and dark gray color.
+- **Chinese TTS**: The app reads the **Chinese Characters** (`word.char`) using a Chinese voice.
+- **Exclusive Playback**: Clicking a new card **immediately stops** any currently playing audio.
+- **Male Voice Preference**: It attempts to use a **Male Chinese Voice** (e.g., "Microsoft Kangkang") if available.
+- **Robust Audio**: Fallback to Google Translate TTS if browser voice is missing.
+- **Responsive Design**: Adjusted font sizes and padding to look great on all screen sizes.
 
 ## How to Run
 
@@ -22,7 +27,9 @@ I have updated the application to fetch data dynamically, improved font renderin
 4.  Open your browser and go to `http://localhost:3000`.
 
 ## Project Structure
-- `src/app/page.js`: Main page with responsive grid.
-- `src/components/WordCard.js`: Card component with proxied Google TTS integration.
-- `src/app/api/words/route.js`: API endpoint for Google Sheet data.
+- `src/app/page.js`: Main page with responsive grid and audio state management.
+- `src/app/add/page.js`: Page for adding new vocabulary.
+- `src/components/WordCard.js`: Card component with exclusive playback logic.
+- `src/app/api/words/route.js`: API endpoint that merges Google Sheet and local data.
+- `src/app/api/add/route.js`: API endpoint to save new words locally.
 - `src/app/api/tts/route.js`: API endpoint for proxying TTS audio.

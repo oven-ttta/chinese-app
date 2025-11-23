@@ -7,6 +7,7 @@ export default function Home() {
   const [words, setWords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeId, setActiveId] = useState(null);
 
   useEffect(() => {
     async function fetchWords() {
@@ -26,6 +27,14 @@ export default function Home() {
 
     fetchWords();
   }, []);
+
+  const handlePlay = (id) => {
+    setActiveId(id);
+  };
+
+  const handleStop = () => {
+    setActiveId(null);
+  };
 
   if (loading) {
     return (
@@ -59,11 +68,26 @@ export default function Home() {
             </svg>
             <span>กดที่การ์ดเพื่อฟังเสียง (Click card to listen)</span>
           </div>
+
+          <div className="mt-6">
+            <a href="/add" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              เพิ่มคำศัพท์ใหม่ (Add Word)
+            </a>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {words.map((word) => (
-            <WordCard key={word.id} word={word} />
+            <WordCard
+              key={word.id}
+              word={word}
+              isActive={activeId === word.id}
+              onPlay={() => handlePlay(word.id)}
+              onStop={handleStop}
+            />
           ))}
         </div>
 

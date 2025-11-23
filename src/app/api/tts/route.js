@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const text = searchParams.get('text');
+    const lang = searchParams.get('lang') || 'zh-CN'; // Default to Chinese if not specified
 
     if (!text) {
         return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -10,7 +11,8 @@ export async function GET(request) {
 
     try {
         // Google Translate TTS URL
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=zh-CN&client=tw-ob`;
+        // tl = target language
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`;
 
         const response = await fetch(url, {
             headers: {

@@ -1,43 +1,113 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function WordCard({ word }) {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef(null);
+// Global variable to track the currently playing proxy audio
+let currentProxyAudio = null;
 
-    const speak = () => {
-        if (isPlaying) return;
+export default function WordCard({ word, isActive, onPlay, onStop }) {
+    const [voice, setVoice] = useState(null);
 
-        setIsPlaying(true);
+    useEffect(() => {
+        const loadVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            // Try to find a Chinese male voice
+            const maleVoice = voices.find(v =>
+                (v.lang.includes('zh') || v.lang.includes('CN')) &&
+                (v.name.includes('Male') || v.name.includes('Kangkang') || v.name.includes('Danny'))
+            );
 
-        // Use our own proxy API to avoid CORS/loading errors
-        const audio = new Audio(`/api/tts?text=${encodeURIComponent(word.char)}`);
+            // Fallback to any Chinese voice
+            const anyChineseVoice = voices.find(v => v.lang === 'zh-CN' || v.lang === 'zh');
 
-        audio.onended = () => setIsPlaying(false);
-        audio.onerror = (e) => {
-            console.error("Audio playback error:", e);
-            setIsPlaying(false);
-            // Fallback to browser TTS if audio fails
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(word.char);
-                utterance.lang = 'th-TH';
-                window.speechSynthesis.speak(utterance);
-            } else {
-                alert("Audio playback failed");
+            setVoice(maleVoice || anyChineseVoice);
+        };
+
+        loadVoices();
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        return () => {
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = null;
             }
+        };
+    }, []);
+
+    const stopAllAudio = () => {
+        // Stop browser TTS
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        // Stop proxy audio
+        if (currentProxyAudio) {
+            currentProxyAudio.pause();
+            currentProxyAudio = null;
+        }
+    };
+
+    const playProxyAudio = () => {
+        // Use zh-CN for Chinese Characters
+        const audio = new Audio(`/api/tts?text=${encodeURIComponent(word.char)}&lang=zh-CN`);
+        currentProxyAudio = audio;
+
+        audio.onended = () => {
+            currentProxyAudio = null;
+            onStop();
+        };
+        audio.onerror = (e) => {
+            console.error("Proxy Audio Error:", e);
+            currentProxyAudio = null;
+            onStop();
+            alert("Audio playback failed completely.");
         };
 
         audio.play().catch(e => {
-            console.error("Audio play error:", e);
-            setIsPlaying(false);
+            console.error("Proxy Audio Play Error:", e);
+            currentProxyAudio = null;
+            onStop();
         });
+    };
+
+    const speak = () => {
+        // Stop any currently playing audio (from this or other cards)
+        stopAllAudio();
+
+        // Notify parent that this card is playing
+        onPlay();
+
+        if ('speechSynthesis' in window) {
+            // If we have a voice, try browser TTS
+            if (voice) {
+                const utterance = new SpeechSynthesisUtterance(word.char);
+                utterance.lang = 'zh-CN';
+                utterance.voice = voice;
+                utterance.rate = 0.8;
+
+                utterance.onend = () => onStop();
+                utterance.onerror = (e) => {
+                    console.warn("Browser TTS failed, trying proxy...", e);
+                    // Don't call onStop here, let proxy take over
+                    playProxyAudio();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                // No Chinese voice found, use proxy directly
+                console.log("No Chinese voice found, using proxy.");
+                playProxyAudio();
+            }
+        } else {
+            // Browser doesn't support TTS, use proxy
+            playProxyAudio();
+        }
     };
 
     return (
         <div
             onClick={speak}
-            className={`bg-white rounded-2xl shadow-md p-4 sm:p-6 cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl border-2 relative overflow-hidden group ${isPlaying ? 'border-blue-500 ring-4 ring-blue-100' : 'border-transparent hover:border-blue-300'}`}
+            className={`bg-white rounded-2xl shadow-md p-4 sm:p-6 cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl border-2 relative overflow-hidden group ${isActive ? 'border-blue-500 ring-4 ring-blue-100' : 'border-transparent hover:border-blue-300'}`}
         >
             {/* Background decoration */}
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 sm:w-24 sm:h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
@@ -45,7 +115,7 @@ export default function WordCard({ word }) {
             <div className="relative z-10 text-center flex flex-col items-center h-full justify-between">
                 <div className="mb-4 w-full">
                     <div className="text-5xl sm:text-6xl md:text-7xl font-bold text-gray-800 mb-2 font-sans transition-colors group-hover:text-blue-600 break-words">{word.char}</div>
-                    <div className="text-xl sm:text-2xl text-blue-500 font-semibold font-serif">{word.pinyin}</div>
+                    <div className="text-xl sm:text-2xl text-gray-800 font-medium" style={{ fontFamily: 'Arial, sans-serif' }}>{word.pinyin}</div>
                 </div>
 
                 <div className="space-y-1 w-full">
@@ -57,7 +127,7 @@ export default function WordCard({ word }) {
                 </div>
 
                 {/* Speaker Icon hint */}
-                <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ${isPlaying ? 'animate-pulse opacity-100' : ''}`}>
+                <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'animate-pulse opacity-100' : ''}`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                     </svg>
