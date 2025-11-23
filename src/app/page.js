@@ -8,6 +8,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeId, setActiveId] = useState(null);
+  const [selectedVowel, setSelectedVowel] = useState('all');
+  const [selectedTone, setSelectedTone] = useState('all');
 
   useEffect(() => {
     async function fetchWords() {
@@ -35,6 +37,67 @@ export default function Home() {
   const handleStop = () => {
     setActiveId(null);
   };
+
+  // Filter Logic
+  const filteredWords = words.filter(word => {
+    // Vowel Filter
+    if (selectedVowel !== 'all') {
+      const pinyinLower = word.pinyin.toLowerCase();
+      // Simple check for vowel presence. 
+      // Note: This might be too simple if we want strict "main vowel" matching, 
+      // but for a basic filter it works.
+      // For 'ü', we check 'ü' or 'v' (common typing for ü)
+      if (selectedVowel === 'ü') {
+        if (!pinyinLower.includes('ü') && !pinyinLower.includes('v')) return false;
+      } else {
+        // Remove tone marks for easier checking? 
+        // Actually, let's check if the character is present.
+        // But pinyin often has tone marks on vowels (ā, á, ǎ, à).
+        // Standardizing to base vowel might be better.
+        const baseVowels = {
+          'a': ['a', 'ā', 'á', 'ǎ', 'à'],
+          'o': ['o', 'ō', 'ó', 'ǒ', 'ò'],
+          'e': ['e', 'ē', 'é', 'ě', 'è'],
+          'i': ['i', 'ī', 'í', 'ǐ', 'ì'],
+          'u': ['u', 'ū', 'ú', 'ǔ', 'ù'],
+        };
+
+        if (baseVowels[selectedVowel]) {
+          const hasVowel = baseVowels[selectedVowel].some(v => pinyinLower.includes(v));
+          if (!hasVowel) return false;
+        } else {
+          // Fallback
+          if (!pinyinLower.includes(selectedVowel)) return false;
+        }
+      }
+    }
+
+    // Tone Filter
+    if (selectedTone !== 'all') {
+      // Assuming word.tone is a number or string '1', '2', '3', '4'
+      if (String(word.tone) !== String(selectedTone)) return false;
+    }
+
+    return true;
+  });
+
+  const vowels = [
+    { id: 'all', label: 'ทั้งหมด' },
+    { id: 'a', label: 'a (อา)' },
+    { id: 'o', label: 'o (โอ)' },
+    { id: 'e', label: 'e (เออ)' },
+    { id: 'i', label: 'i (อี)' },
+    { id: 'u', label: 'u (อู)' },
+    { id: 'ü', label: 'ü (อวี)' },
+  ];
+
+  const tones = [
+    { id: 'all', label: 'ทั้งหมด' },
+    { id: '1', label: 'เสียง 1 (ˉ)' },
+    { id: '2', label: 'เสียง 2 (ˊ)' },
+    { id: '3', label: 'เสียง 3 (ˇ)' },
+    { id: '4', label: 'เสียง 4 (ˋ)' },
+  ];
 
   if (loading) {
     return (
@@ -79,8 +142,51 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Filters */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8 space-y-6">
+          {/* Vowel Filter */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">เลือกสระ (Vowel)</h3>
+            <div className="flex flex-wrap gap-2">
+              {vowels.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedVowel(v.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${selectedVowel === v.id
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tone Filter */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">เลือกเสียงวรรณยุกต์ (Tone)</h3>
+            <div className="flex flex-wrap gap-2">
+              {tones.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setSelectedTone(t.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${selectedTone === t.id
+                      ? 'bg-orange-500 text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {words.map((word) => (
+          {filteredWords.map((word) => (
             <WordCard
               key={word.id}
               word={word}

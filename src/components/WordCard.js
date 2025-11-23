@@ -35,78 +35,94 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
         };
     }, []);
 
-    const stopAllAudio = () => {
-        // Stop browser TTS
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
-        // Stop proxy audio
-        if (currentProxyAudio) {
-            currentProxyAudio.pause();
-            currentProxyAudio = null;
-        }
-    };
+    useEffect(() => {
+        let currentAudio = null;
+        let utterance = null;
 
-    const playProxyAudio = () => {
-        // Use zh-CN for Chinese Characters
-        const audio = new Audio(`/api/tts?text=${encodeURIComponent(word.char)}&lang=zh-CN`);
-        currentProxyAudio = audio;
+        const playProxy = () => {
+            currentAudio = new Audio(`/api/tts?text=${encodeURIComponent(word.char)}&lang=zh-CN`);
+            currentProxyAudio = currentAudio;
 
-        audio.onended = () => {
-            currentProxyAudio = null;
-            onStop();
-        };
-        audio.onerror = (e) => {
-            console.error("Proxy Audio Error:", e);
-            currentProxyAudio = null;
-            onStop();
-            alert("Audio playback failed completely.");
+            currentAudio.onended = () => {
+                currentProxyAudio = null;
+                onStop();
+            };
+            currentAudio.onerror = (e) => {
+                console.error("Proxy Audio Error:", e);
+                currentProxyAudio = null;
+                onStop();
+            };
+
+            currentAudio.play().catch(e => {
+                console.error("Proxy Audio Play Error:", e);
+                currentProxyAudio = null;
+                onStop();
+            });
         };
 
-        audio.play().catch(e => {
-            console.error("Proxy Audio Play Error:", e);
-            currentProxyAudio = null;
-            onStop();
-        });
-    };
-
-    const speak = () => {
-        // Stop any currently playing audio (from this or other cards)
-        stopAllAudio();
-
-        // Notify parent that this card is playing
-        onPlay();
-
-        if ('speechSynthesis' in window) {
-            // If we have a voice, try browser TTS
-            if (voice) {
-                const utterance = new SpeechSynthesisUtterance(word.char);
-                utterance.lang = 'zh-CN';
-                utterance.voice = voice;
-                utterance.rate = 0.8;
-
-                utterance.onend = () => onStop();
-                utterance.onerror = (e) => {
-                    console.warn("Browser TTS failed, trying proxy...", e);
-                    // Don't call onStop here, let proxy take over
-                    playProxyAudio();
-                };
-
-                window.speechSynthesis.speak(utterance);
-            } else {
-                // No Chinese voice found, use proxy directly
-                console.log("No Chinese voice found, using proxy.");
-                playProxyAudio();
+        if (isActive) {
+            // Stop any lingering audio first (safety net)
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
             }
+            if (currentProxyAudio) {
+                currentProxyAudio.pause();
+                currentProxyAudio = null;
+            }
+
+            if ('speechSynthesis' in window) {
+                // If we have a voice, try browser TTS
+                if (voice) {
+                    utterance = new SpeechSynthesisUtterance(word.char);
+                    utterance.lang = 'zh-CN';
+                    utterance.voice = voice;
+                    utterance.rate = 0.8;
+
+                    utterance.onend = () => onStop();
+                    utterance.onerror = (e) => {
+                        console.warn("Browser TTS failed, trying proxy...", e);
+                        // If TTS fails, try proxy. 
+                        // Note: This might cause a slight race if cleanup runs, but usually safe.
+                        playProxy();
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    // No Chinese voice found, use proxy directly
+                    console.log("No Chinese voice found, using proxy.");
+                    playProxy();
+                }
+            } else {
+                // Browser doesn't support TTS, use proxy
+                playProxy();
+            }
+        }
+
+        return () => {
+            // Cleanup: Stop audio when isActive becomes false or component unmounts
+            if (utterance) {
+                window.speechSynthesis.cancel();
+            }
+            if (currentAudio) {
+                currentAudio.pause();
+                if (currentProxyAudio === currentAudio) {
+                    currentProxyAudio = null;
+                }
+            }
+        };
+    }, [isActive, word]); // Intentionally omitting voice to avoid restart on voice load
+
+    const handleClick = () => {
+        if (isActive) {
+            onStop();
         } else {
-            // Browser doesn't support TTS, use proxy
-            playProxyAudio();
+            onPlay();
         }
     };
 
     return (
         <div
-            onClick={speak}
+            onClick={handleClick}
             className={`bg-white rounded-2xl shadow-md p-4 sm:p-6 cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl border-2 relative overflow-hidden group ${isActive ? 'border-blue-500 ring-4 ring-blue-100' : 'border-transparent hover:border-blue-300'}`}
         >
             {/* Background decoration */}
