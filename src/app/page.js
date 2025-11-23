@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchWords() {
       try {
-        const response = await fetch('/api/words');
+        const response = await fetch('/api/words', { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to fetch words');
         }

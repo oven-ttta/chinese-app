@@ -1,8 +1,4 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const dataFilePath = path.join(process.cwd(), 'src', 'data', 'local_words.json');
 
 export async function POST(request) {
     try {
@@ -13,42 +9,28 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // Ensure directory exists
-        const dir = path.dirname(dataFilePath);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+        // REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqUzv6hfUgEdDvacvKCKOxQ742J01JMnk1YhiN601u2HEOLuEnofyhNToqgXmeZuUvZw/exec';
+
+        if (GOOGLE_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) {
+            return NextResponse.json({ error: 'Please configure the Google Script URL in src/app/api/add/route.js' }, { status: 500 });
         }
 
-        // Read existing data
-        let words = [];
-        if (fs.existsSync(dataFilePath)) {
-            const fileContent = fs.readFileSync(dataFilePath, 'utf8');
-            try {
-                words = JSON.parse(fileContent);
-            } catch (e) {
-                console.error("Error parsing local words:", e);
-                words = [];
-            }
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ char, pinyin, thai, tone, meaning }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send data to Google Sheet');
         }
 
-        // Create new word object
-        // Generate a unique ID (using timestamp)
-        const newWord = {
-            id: `local_${Date.now()}`,
-            char,
-            pinyin,
-            thai,
-            tone: tone || '',
-            meaning
-        };
+        const result = await response.json();
 
-        // Add to array
-        words.push(newWord);
-
-        // Save back to file
-        fs.writeFileSync(dataFilePath, JSON.stringify(words, null, 2));
-
-        return NextResponse.json({ success: true, word: newWord });
+        return NextResponse.json({ success: true, result });
     } catch (error) {
         console.error('Error saving word:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

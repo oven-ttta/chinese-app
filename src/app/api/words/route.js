@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -32,22 +30,8 @@ export async function GET() {
             console.error("Error fetching sheet:", e);
         }
 
-        // 2. Fetch from Local File
-        let localWords = [];
-        const localFilePath = path.join(process.cwd(), 'src', 'data', 'local_words.json');
-        if (fs.existsSync(localFilePath)) {
-            try {
-                const fileContent = fs.readFileSync(localFilePath, 'utf8');
-                localWords = JSON.parse(fileContent);
-            } catch (e) {
-                console.error("Error reading local words:", e);
-            }
-        }
-
-        // 3. Merge Data
-        const allWords = [...sheetWords, ...localWords];
-
-        return NextResponse.json(allWords);
+        // 2. Return Sheet Data Only
+        return NextResponse.json(sheetWords);
     } catch (error) {
         console.error('Error fetching data:', error);
         return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
