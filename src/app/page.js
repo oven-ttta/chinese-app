@@ -42,13 +42,27 @@ export default function Home() {
   const filteredWords = words.filter(word => {
     // Vowel Filter
     if (selectedVowel !== 'all') {
-      const pinyinLower = word.pinyin.toLowerCase();
-      // Simple check for vowel presence. 
+      const pinyinLower = (word.pinyin || '').toLowerCase();
       // Note: This might be too simple if we want strict "main vowel" matching, 
       // but for a basic filter it works.
       // For 'ü', we check 'ü' or 'v' (common typing for ü)
+      // Also 'u' after j, q, x, y represents 'ü'
       if (selectedVowel === 'ü') {
-        if (!pinyinLower.includes('ü') && !pinyinLower.includes('v')) return false;
+        // Check for explicit ü and its tone variants
+        const uUmlautVariants = ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ', 'v'];
+        const hasExplicitU = uUmlautVariants.some(v => pinyinLower.includes(v));
+
+        if (hasExplicitU) {
+          // keep it
+        } else {
+          // Check for hidden ü (u after j, q, x, y)
+          const uVariants = ['u', 'ū', 'ú', 'ǔ', 'ù'];
+          const initials = ['j', 'q', 'x', 'y'];
+          const hasHiddenU = initials.some(initial => {
+            return uVariants.some(u => pinyinLower.includes(initial + u));
+          });
+          if (!hasHiddenU) return false;
+        }
       } else {
         // Remove tone marks for easier checking? 
         // Actually, let's check if the character is present.
@@ -74,8 +88,9 @@ export default function Home() {
 
     // Tone Filter
     if (selectedTone !== 'all') {
-      // Assuming word.tone is a number or string '1', '2', '3', '4'
-      if (String(word.tone) !== String(selectedTone)) return false;
+      // Check if the tone string contains the selected tone number
+      // The data format is like "เสียง 4" or "เสียง 1, เสียง 1"
+      if (!String(word.tone || '').includes(selectedTone)) return false;
     }
 
     return true;
@@ -109,8 +124,14 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-red-500 text-xl">Error: {error}</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
+        <div className="text-red-500 text-xl font-semibold">Error: {error}</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+        >
+          ลองใหม่ (Retry)
+        </button>
       </div>
     );
   }
@@ -152,49 +173,47 @@ export default function Home() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8 space-y-6">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
           {/* Vowel Filter */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">เลือกสระ (Vowel)</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <label htmlFor="vowel-select" className="text-sm font-semibold text-slate-700 whitespace-nowrap">
+              สระ (Vowel):
+            </label>
+            <select
+              id="vowel-select"
+              value={selectedVowel}
+              onChange={(e) => setSelectedVowel(e.target.value)}
+              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-slate-50"
+            >
               {vowels.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => setSelectedVowel(v.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${selectedVowel === v.id
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                >
+                <option key={v.id} value={v.id}>
                   {v.label}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Tone Filter */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">เลือกเสียงวรรณยุกต์ (Tone)</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <label htmlFor="tone-select" className="text-sm font-semibold text-slate-700 whitespace-nowrap">
+              วรรณยุกต์ (Tone):
+            </label>
+            <select
+              id="tone-select"
+              value={selectedTone}
+              onChange={(e) => setSelectedTone(e.target.value)}
+              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-slate-50"
+            >
               {tones.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setSelectedTone(t.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${selectedTone === t.id
-                      ? 'bg-orange-500 text-white shadow-md'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                >
+                <option key={t.id} value={t.id}>
                   {t.label}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6 lg:gap-8">
           {filteredWords.map((word) => (
             <WordCard
               key={word.id}

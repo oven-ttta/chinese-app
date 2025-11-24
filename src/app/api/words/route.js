@@ -12,6 +12,9 @@ export async function GET() {
         let sheetWords = [];
         try {
             const response = await fetch(csvUrl);
+            if (!response.ok) {
+                throw new Error(`Google Sheet returned ${response.status}: ${response.statusText}`);
+            }
             const csvText = await response.text();
             const rows = parseCSV(csvText);
 
@@ -28,6 +31,8 @@ export async function GET() {
             }).filter(item => item !== null && item.char);
         } catch (e) {
             console.error("Error fetching sheet:", e);
+            // If sheet fails, we might want to return an error to the client so they know
+            throw e;
         }
 
         // 2. Return Sheet Data Only

@@ -35,11 +35,21 @@ export default function PinyinCard({ char, label, colorClass, isActive, onPlay, 
         let currentAudio = null;
         let utterance = null;
 
+        // Mapping for initials to make them pronounceable
+        const initialToPinyin = {
+            'b': 'bo', 'p': 'po', 'm': 'mo', 'f': 'fo',
+            'd': 'de', 't': 'te', 'n': 'ne', 'l': 'le',
+            'g': 'ge', 'k': 'ke', 'h': 'he',
+            'j': 'ji', 'q': 'qi', 'x': 'xi',
+            'zh': 'zhi', 'ch': 'chi', 'sh': 'shi', 'r': 'ri',
+            'z': 'zi', 'c': 'ci', 's': 'si',
+            'y': 'yi', 'w': 'wu'
+        };
+
+        const textToSpeak = initialToPinyin[char] || char;
+
         const playProxy = () => {
-            // For single pinyin/initials, we might need to adjust the text for better TTS
-            // e.g., 'b' -> 'bo', 'p' -> 'po' for initials if just sending 'b' doesn't work well.
-            // But let's try sending the char first.
-            currentAudio = new Audio(`/api/tts?text=${encodeURIComponent(char)}&lang=zh-CN`);
+            currentAudio = new Audio(`/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=zh-CN`);
             currentProxyAudio = currentAudio;
 
             currentAudio.onended = () => {
@@ -70,7 +80,7 @@ export default function PinyinCard({ char, label, colorClass, isActive, onPlay, 
 
             if ('speechSynthesis' in window) {
                 if (voice) {
-                    utterance = new SpeechSynthesisUtterance(char);
+                    utterance = new SpeechSynthesisUtterance(textToSpeak);
                     utterance.lang = 'zh-CN';
                     utterance.voice = voice;
                     utterance.rate = 0.8;
@@ -101,7 +111,7 @@ export default function PinyinCard({ char, label, colorClass, isActive, onPlay, 
                 }
             }
         };
-    }, [isActive, char]);
+    }, [isActive, char, voice]);
 
     const handleClick = () => {
         if (isActive) {
