@@ -37,9 +37,9 @@ export default function PinyinCard({ char, label, colorClass, isActive, onPlay, 
 
         // Mapping for initials to make them pronounceable
         const initialToPinyin = {
-            'b': 'bo', 'p': 'po', 'm': 'mo', 'f': 'fo',
+            'b': 'bò', 'p': 'pò', 'm': 'mò', 'f': 'fò',
             'd': 'de', 't': 'te', 'n': 'ne', 'l': 'le',
-            'g': 'ge', 'k': 'ke', 'h': 'he',
+            'g': 'ge', 'k': 'ke', 'h': 'hè',
             'j': 'ji', 'q': 'qi', 'x': 'xi',
             'zh': 'zhi', 'ch': 'chi', 'sh': 'shi', 'r': 'ri',
             'z': 'zi', 'c': 'ci', 's': 'si',

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
 import PinyinCard from '@/components/PinyinCard';
 
 export default function PinyinPage() {
@@ -15,29 +16,17 @@ export default function PinyinPage() {
     };
 
     const initials = [
-        { id: 'b', char: 'b', label: 'b (ป)', color: 'bg-amber-400' },
-        { id: 'p', char: 'p', label: 'p (พ)', color: 'bg-amber-400' },
-        { id: 'm', char: 'm', label: 'm (ม)', color: 'bg-amber-400' },
-        { id: 'f', char: 'f', label: 'f (ฟ)', color: 'bg-amber-400' },
-        { id: 'd', char: 'd', label: 'd (ต)', color: 'bg-red-600' },
-        { id: 't', char: 't', label: 't (ท)', color: 'bg-red-600' },
-        { id: 'n', char: 'n', label: 'n (น)', color: 'bg-red-600' },
-        { id: 'l', char: 'l', label: 'l (ล)', color: 'bg-red-600' },
-        { id: 'g', char: 'g', label: 'g (ก)', color: 'bg-orange-400' },
-        { id: 'k', char: 'k', label: 'k (ค)', color: 'bg-orange-400' },
-        { id: 'h', char: 'h', label: 'h (ฮ)', color: 'bg-orange-400' },
-        { id: 'j', char: 'j', label: 'j (จ)', color: 'bg-pink-500' },
-        { id: 'q', char: 'q', label: 'q (ช)', color: 'bg-pink-500' },
-        { id: 'x', char: 'x', label: 'x (ซ)', color: 'bg-pink-500' },
-        { id: 'zh', char: 'zh', label: 'zh (จ)', color: 'bg-green-500' },
-        { id: 'ch', char: 'ch', label: 'ch (ช)', color: 'bg-green-500' },
-        { id: 'sh', char: 'sh', label: 'sh (ซ)', color: 'bg-green-500' },
-        { id: 'r', char: 'r', label: 'r (ย/ร)', color: 'bg-green-500' },
-        { id: 'z', char: 'z', label: 'z (จ)', color: 'bg-purple-500' },
-        { id: 'c', char: 'c', label: 'c (ช)', color: 'bg-purple-500' },
-        { id: 's', char: 's', label: 's (ซ)', color: 'bg-purple-500' },
-        { id: 'y', char: 'y', label: 'y (ย)', color: 'bg-blue-400' },
-        { id: 'w', char: 'w', label: 'w (ว)', color: 'bg-blue-400' },
+        { id: 'b', char: 'bò', label: 'b (โป่)', color: 'bg-amber-400' },
+        { id: 'p', char: 'pò', label: 'p (โผ่)', color: 'bg-amber-400' },
+        { id: 'm', char: 'mò', label: 'm (โม่)', color: 'bg-amber-400' },
+        { id: 'f', char: 'fò', label: 'f (โฟ่)', color: 'bg-amber-400' },
+        { id: 'd', char: 'de', label: 'd (เต่อะ)', color: 'bg-red-600' },
+        { id: 't', char: 'te', label: 't (เท่อะ)', color: 'bg-red-600' },
+        { id: 'n', char: 'ne', label: 'n (เน่อะ)', color: 'bg-red-600' },
+        { id: 'l', char: 'le', label: 'l (เล่อะ)', color: 'bg-red-600' },
+        { id: 'g', char: 'ge', label: 'g (เก่อะ)', color: 'bg-orange-400' },
+        { id: 'k', char: 'ke', label: 'k (เค่อะ)', color: 'bg-orange-400' },
+        { id: 'h', char: 'hè', label: 'h (เห่อะ)', color: 'bg-orange-400' },
     ];
 
     const vowels = [
@@ -67,12 +56,12 @@ export default function PinyinPage() {
                         ฝึกอ่านออกเสียงพยัญชนะ สระ และวรรณยุกต์ (Initials, Vowels, Tones)
                     </p>
                     <div className="mt-6">
-                        <a href="/" className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center gap-2">
+                        <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                             </svg>
                             กลับหน้าหลัก (Back to Home)
-                        </a>
+                        </Link>
                     </div>
                 </div>
 
