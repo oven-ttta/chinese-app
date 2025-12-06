@@ -27,17 +27,16 @@ export async function GET() {
                     thai: row[2],
                     tone: row[3],
                     meaning: row[4],
-                    contributor: row[5] || '', // Default to empty string if missing
-                    date: row[6] || ''         // Default to empty string if missing
+                    contributor: row[5] || '',
+                    strokeOrderGifUrl: row[6] || '',
+                    date: row[7] || ''
                 };
             }).filter(item => item !== null && item.char);
         } catch (e) {
             console.error("Error fetching sheet:", e);
-            // If sheet fails, we might want to return an error to the client so they know
             throw e;
         }
 
-        // 2. Return Sheet Data Only
         return NextResponse.json(sheetWords);
     } catch (error) {
         console.error('Error fetching data:', error);

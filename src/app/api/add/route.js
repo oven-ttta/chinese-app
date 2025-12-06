@@ -64,7 +64,7 @@ export async function POST(request) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ char, pinyin, thai, tone, meaning, contributor, date, strokeOrderGifUrl }),
+            body: JSON.stringify({ char, pinyin, thai, tone, meaning, contributor, date, image: strokeOrderGifUrl }),
         });
 
         if (!response.ok) {

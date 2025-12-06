@@ -141,6 +141,12 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                     <div className="text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
                         {word.meaning}
                     </div>
+                    {word.strokeOrderGifUrl && (
+                        <div className="mt-1 flex justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={word.strokeOrderGifUrl} alt="Stroke Order" className="h-8 w-8 object-contain" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Speaker Icon hint */}
