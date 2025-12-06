@@ -26,7 +26,9 @@ export async function GET() {
                     pinyin: row[1],
                     thai: row[2],
                     tone: row[3],
-                    meaning: row[4]
+                    meaning: row[4],
+                    contributor: row[5] || '', // Default to empty string if missing
+                    date: row[6] || ''         // Default to empty string if missing
                 };
             }).filter(item => item !== null && item.char);
         } catch (e) {
