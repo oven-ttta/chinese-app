@@ -43,19 +43,10 @@ export default function Home() {
     // Vowel Filter
     if (selectedVowel !== 'all') {
       const pinyinLower = (word.pinyin || '').toLowerCase();
-      // Note: This might be too simple if we want strict "main vowel" matching, 
-      // but for a basic filter it works.
-      // For 'ü', we check 'ü' or 'v' (common typing for ü)
-      // Also 'u' after j, q, x, y represents 'ü'
       if (selectedVowel === 'ü') {
-        // Check for explicit ü and its tone variants
         const uUmlautVariants = ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ', 'v'];
         const hasExplicitU = uUmlautVariants.some(v => pinyinLower.includes(v));
-
-        if (hasExplicitU) {
-          // keep it
-        } else {
-          // Check for hidden ü (u after j, q, x, y)
+        if (!hasExplicitU) {
           const uVariants = ['u', 'ū', 'ú', 'ǔ', 'ù'];
           const initials = ['j', 'q', 'x', 'y'];
           const hasHiddenU = initials.some(initial => {
@@ -64,10 +55,6 @@ export default function Home() {
           if (!hasHiddenU) return false;
         }
       } else {
-        // Remove tone marks for easier checking? 
-        // Actually, let's check if the character is present.
-        // But pinyin often has tone marks on vowels (ā, á, ǎ, à).
-        // Standardizing to base vowel might be better.
         const baseVowels = {
           'a': ['a', 'ā', 'á', 'ǎ', 'à'],
           'o': ['o', 'ō', 'ó', 'ǒ', 'ò'],
@@ -80,7 +67,6 @@ export default function Home() {
           const hasVowel = baseVowels[selectedVowel].some(v => pinyinLower.includes(v));
           if (!hasVowel) return false;
         } else {
-          // Fallback
           if (!pinyinLower.includes(selectedVowel)) return false;
         }
       }
@@ -88,8 +74,6 @@ export default function Home() {
 
     // Tone Filter
     if (selectedTone !== 'all') {
-      // Check if the tone string contains the selected tone number
-      // The data format is like "เสียง 4" or "เสียง 1, เสียง 1"
       if (!String(word.tone || '').includes(selectedTone)) return false;
     }
 
@@ -141,17 +125,18 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-slate-100 flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
+
           {/* Vowel Filter */}
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <label htmlFor="vowel-select" className="text-sm font-bold text-slate-900 whitespace-nowrap">
+          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+            <label htmlFor="vowel-select" className="text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
               สระ (Vowel):
             </label>
             <select
               id="vowel-select"
               value={selectedVowel}
               onChange={(e) => setSelectedVowel(e.target.value)}
-              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base text-slate-900 font-medium border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white shadow-sm"
+              className="block w-full pl-3 pr-10 py-2.5 text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
             >
               {vowels.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -162,15 +147,15 @@ export default function Home() {
           </div>
 
           {/* Tone Filter */}
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <label htmlFor="tone-select" className="text-sm font-bold text-slate-900 whitespace-nowrap">
+          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+            <label htmlFor="tone-select" className="text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
               วรรณยุกต์ (Tone):
             </label>
             <select
               id="tone-select"
               value={selectedTone}
               onChange={(e) => setSelectedTone(e.target.value)}
-              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base text-slate-900 font-medium border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white shadow-sm"
+              className="block w-full pl-3 pr-10 py-2.5 text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
             >
               {tones.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -181,6 +166,7 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Word Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6 lg:gap-8">
           {filteredWords.map((word) => (
             <WordCard

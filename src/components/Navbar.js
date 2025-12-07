@@ -4,53 +4,31 @@ import Link from 'next/link';
 
 export default function Navbar() {
     return (
-        <nav className="bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center">
-                        <span className="text-white text-2xl font-bold">
-                            เรียนภาษาจีน
-                        </span>
+        <nav className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
+            <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+                {/* Logo Section */}
+                <Link href="/" className="text-2xl font-extrabold tracking-tight hover:opacity-90 transition-opacity flex items-center gap-2 group">
+                    <span className="text-3xl group-hover:scale-110 transition-transform">🇨🇳</span>
+                    <span>คำศัพท์จีน</span>
+                </Link>
+
+                {/* Navigation Links */}
+                <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-6 text-sm sm:text-base font-medium">
+                    <Link href="/" className="hover:text-blue-100 transition-colors py-1.5 px-3 rounded-md hover:bg-white/10">
+                        หน้าแรก
+                    </Link>
+                    <Link href="/pinyin" className="hover:text-blue-100 transition-colors py-1.5 px-3 rounded-md hover:bg-white/10">
+                        พินอิน
+                    </Link>
+                    <Link href="/stroke-order" className="hover:text-blue-100 transition-colors py-1.5 px-3 rounded-md hover:bg-white/10">
+                        ฝึกเขียน
                     </Link>
 
-                    {/* Menu Items */}
-                    <div className="flex items-center gap-8">
-                        <Link
-                            href="/"
-                            className="text-white hover:text-blue-100 transition-colors font-medium"
-                        >
-                            Home
-                        </Link>
-
-                        <Link
-                            href="/pinyin"
-                            className="text-white hover:text-blue-100 transition-colors font-medium"
-                        >
-                            Pinyin Chart
-                        </Link>
-
-                        <Link
-                            href="/add"
-                            className="text-white hover:text-blue-100 transition-colors font-medium"
-                        >
-                            Add Word
-                        </Link>
-
-                        <Link
-                            href="/report"
-                            className="text-white hover:text-blue-100 transition-colors font-medium"
-                        >
-                            Report
-                        </Link>
-
-                        <Link
-                            href="/stroke-order"
-                            className="text-white hover:text-blue-100 transition-colors font-medium bg-white/10 px-3 py-1 rounded-full hover:bg-white/20"
-                        >
-                            Stroke Order
-                        </Link>
-                    </div>
+                    {/* Primary Action Button */}
+                    <Link href="/add" className="bg-white/20 hover:bg-white/30 px-4 py-1.5 rounded-full transition-all flex items-center gap-2 backdrop-blur-sm border border-white/20 hover:border-white/40 shadow-sm active:scale-95">
+                        <span className="text-lg leading-none font-bold">+</span>
+                        <span>เพิ่มคำศัพท์</span>
+                    </Link>
                 </div>
             </div>
         </nav>

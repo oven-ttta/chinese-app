@@ -95,7 +95,7 @@ export default function PinyinPage() {
                     <h2 className="text-2xl font-bold text-slate-800 mb-6 border-l-4 border-amber-400 pl-4 flex items-center gap-2">
                         พยัญชนะ <span className="text-gray-500 text-lg font-normal">(Initials)</span>
                     </h2>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
                         {initials.map((item) => (
                             <PinyinCard
                                 key={item.id}
@@ -115,7 +115,7 @@ export default function PinyinPage() {
                     <h2 className="text-2xl font-bold text-slate-800 mb-6 border-l-4 border-teal-500 pl-4 flex items-center gap-2">
                         สระเดี่ยว <span className="text-gray-500 text-lg font-normal">(Simple Vowels)</span>
                     </h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
                         {vowels.map((item) => (
                             <PinyinCard
                                 key={item.id}

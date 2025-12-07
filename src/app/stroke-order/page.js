@@ -38,7 +38,15 @@ export default function StrokeOrderPage() {
         containerRef.current.innerHTML = ''; // Clear previous
         writersRef.current = []; // Reset writers array
 
-        const charArray = chars.split('');
+        // Filter only Chinese characters (Unicode range \u4E00-\u9FFF)
+        // This ignores spaces, English, Thai, numbers, punctuation, etc.
+        const charArray = chars.split('').filter(char => /[\u4E00-\u9FFF]/.test(char));
+
+        if (charArray.length === 0 && chars.trim().length > 0) {
+            // Optional: Show a message if no valid Chinese chars found? 
+            // For now, let's just return or let it show empty.
+            // Actually, showing nothing is what the user asked (ignore others).
+        }
 
         // Container for all chars
         const grid = document.createElement('div');
@@ -84,7 +92,7 @@ export default function StrokeOrderPage() {
             // Let's attach a pure HTML button for download for simplicity in this specific DOM-heavy component
             const downloadBtn = document.createElement('button');
             downloadBtn.className = "text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mt-1";
-            
+
             downloadBtn.onclick = () => handleDownloadSingle(char);
             wrapper.appendChild(downloadBtn);
         });
@@ -139,19 +147,19 @@ export default function StrokeOrderPage() {
                     ฝึกเขียนภาษาจีน <span className="text-blue-600">Stroke Order</span>
                 </h1>
 
-                <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+                <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-lg border border-slate-200">
                     {/* Search Input */}
-                    <form onSubmit={handleSearch} className="flex gap-4 justify-center mb-8">
+                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="พิมพ์คำศัพท์ (เช่น 你好)"
-                            className="text-center text-3xl w-64 h-16 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-slate-800 font-bold"
+                            className="text-center text-2xl sm:text-3xl w-full sm:w-64 h-14 sm:h-16 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-slate-800 font-bold"
                         />
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-md flex items-center gap-2"
+                            className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-md flex justify-center items-center gap-2 h-14 sm:h-16 text-lg"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

@@ -57,7 +57,7 @@ export default function AddWord() {
 
     return (
         <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8">
+            <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-4 sm:p-8">
                 <div className="mb-8 flex items-center justify-between">
                     <h1 className="text-3xl font-bold text-gray-900">เพิ่มคำศัพท์ใหม่</h1>
                     <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium">
