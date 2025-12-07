@@ -4,7 +4,7 @@ import * as Minio from 'minio';
 const minioClient = new Minio.Client({
     endPoint: process.env.MINIO_ENDPOINT || 'minio.ovenx.shop',
     port: parseInt(process.env.MINIO_PORT || '9000'),
-    useSSL: process.env.MINIO_SECURE === 'true',
+    useSSL: false, // Cloudflare Tunnel uses HTTP internally
     accessKey: process.env.MINIO_ACCESS_KEY || 'admin',
     secretKey: process.env.MINIO_SECRET_KEY || 'admin12345'
 });
