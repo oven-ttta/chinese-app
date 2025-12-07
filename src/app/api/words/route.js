@@ -7,7 +7,7 @@ export async function GET() {
     try {
         // 1. Fetch from Google Sheet
         const sheetId = '19J6lDC5t-T1qvOpyO-3hryhClqszLbxwaAPzuejY-1M';
-        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=2116654352`;
 
         let sheetWords = [];
         try {
