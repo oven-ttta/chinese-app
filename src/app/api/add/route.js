@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import * as Minio from 'minio';
 
 const minioClient = new Minio.Client({
-    endPoint: process.env.MINIO_ENDPOINT || 'minio.ovenx.shop',
+    endPoint: process.env.MINIO_ENDPOINT || '192.168.1.13', // Use local IP for upload
     port: parseInt(process.env.MINIO_PORT || '9000'),
     useSSL: false, // Cloudflare Tunnel uses HTTP internally
     accessKey: process.env.MINIO_ACCESS_KEY || 'admin',
@@ -52,9 +52,9 @@ export async function POST(request) {
                         'Content-Type': 'image/gif'
                     });
 
-                    // Generate public URL (always use HTTPS for domain)
-                    const endpoint = process.env.MINIO_ENDPOINT || 'minio.ovenx.shop';
-                    const url = `https://${endpoint}/${bucketName}/${filename}`;
+                    // Generate public URL using domain (for external access)
+                    const publicDomain = process.env.MINIO_PUBLIC_URL || 'minio.ovenx.shop';
+                    const url = `https://${publicDomain}/${bucketName}/${filename}`;
                     return url;
                 };
 
