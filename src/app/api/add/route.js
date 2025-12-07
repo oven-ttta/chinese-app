@@ -51,9 +51,12 @@ export async function POST(request) {
                 console.log("Uploaded GIF to:", strokeOrderGifUrl);
 
             } catch (err) {
-                console.error("MinIO Upload Error:", err.message);
-                throw new Error("Failed to upload image: " + err.message);
+                console.error("MinIO Upload Error (Non-fatal, proceeding to save text):", err.message);
+                // Fallback: Save without image, but keep other data intact
+                strokeOrderGifUrl = '';
             }
+        } else {
+            console.log("MinIO skipping: Enabled=", process.env.MINIO_ENABLED, "HasGif=", !!strokeOrderGif);
         }
 
         // REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
