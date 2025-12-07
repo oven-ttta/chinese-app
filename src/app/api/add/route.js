@@ -6,7 +6,7 @@ const minioClient = new Minio.Client({
     port: 443,
     useSSL: process.env.MINIO_SECURE === 'true',
     accessKey: process.env.MINIO_ACCESS_KEY || 'admin',
-    secretKey: process.env.MINIO_SECRET_KEY || 'admin12345'
+    secretKey: process.env.MINIO_SECRET_KEY || 'admin1234'
 });
 
 export async function POST(request) {
@@ -74,6 +74,9 @@ export async function POST(request) {
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
+            const payload = { char, pinyin, thai, tone, meaning, contributor, image: strokeOrderGifUrl, date };
+            console.log("Sending to Google Sheet:", JSON.stringify(payload, null, 2));
+
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 headers: {
