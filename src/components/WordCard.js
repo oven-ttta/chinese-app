@@ -5,13 +5,15 @@ import { useState, useEffect } from 'react';
 // Global variable to track the currently playing proxy audio
 let currentProxyAudio = null;
 
+import HanziPlayer from './HanziPlayer';
+
 export default function WordCard({ word, isActive, onPlay, onStop }) {
     const [voice, setVoice] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
 
     useEffect(() => {
         const loadVoices = () => {
-            const voices = window.speechSynthesis.getVoices();
+            const voices = typeof window !== 'undefined' ? window.speechSynthesis.getVoices() : [];
             const maleVoice = voices.find(v =>
                 (v.lang.includes('zh') || v.lang.includes('CN')) &&
                 (v.name.includes('Male') || v.name.includes('Kangkang') || v.name.includes('Danny'))
@@ -21,12 +23,12 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
         };
 
         loadVoices();
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        if (typeof window !== 'undefined' && window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = loadVoices;
         }
 
         return () => {
-            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            if (typeof window !== 'undefined' && window.speechSynthesis.onvoiceschanged !== undefined) {
                 window.speechSynthesis.onvoiceschanged = null;
             }
         };
@@ -57,34 +59,14 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
             });
         };
 
-        const playLocal = () => {
-            utterance = new SpeechSynthesisUtterance(word.char);
-            utterance.lang = 'zh-CN';
-            utterance.rate = 0.8;
-            utterance.pitch = 0.9;
-
-            if (voice) {
-                utterance.voice = voice;
-            }
-
-            utterance.onend = () => {
-                onStop();
-            };
-
-            utterance.onerror = (e) => {
-                console.error('Speech synthesis error:', e);
-                onStop();
-            };
-
-            window.speechSynthesis.speak(utterance);
-        };
-
         if (isActive) {
             if (currentProxyAudio) {
                 currentProxyAudio.pause();
                 currentProxyAudio = null;
             }
-            window.speechSynthesis.cancel();
+            if (typeof window !== 'undefined') {
+                window.speechSynthesis.cancel();
+            }
 
             playProxy();
         }
@@ -94,7 +76,7 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                 currentAudio.pause();
                 currentAudio = null;
             }
-            if (utterance) {
+            if (utterance && typeof window !== 'undefined') {
                 window.speechSynthesis.cancel();
             }
         };
@@ -126,27 +108,16 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                     </div>
                 </div>
 
-                {/* Right side - Image */}
-                {word.strokeOrderGifUrl && (
-                    <div
-                        className="flex-shrink-0 w-24 h-24 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setShowImageModal(true);
-                        }}
-                    >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={word.strokeOrderGifUrl}
-                            alt="Stroke Order"
-                            className="max-w-full max-h-full object-contain rounded border border-gray-200 shadow-sm"
-                            onError={(e) => {
-                                console.error('Image load error:', word.strokeOrderGifUrl);
-                                e.target.style.display = 'none';
-                            }}
-                        />
-                    </div>
-                )}
+                {/* Right side - Hanzi Writer Preview (Vector SVG) */}
+                <div
+                    className="flex-shrink-0 w-24 h-24 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity bg-white rounded border border-gray-200 overflow-hidden p-1"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowImageModal(true);
+                    }}
+                >
+                    <HanziPlayer char={word.char} size={35} controls={false} />
+                </div>
 
                 {/* Speaker Icon */}
                 <div className={`absolute top-2 left-2 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'animate-pulse opacity-100' : ''}`}>
@@ -157,11 +128,11 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
             </div>
 
             {/* Image Modal */}
-            {showImageModal && word.strokeOrderGifUrl && (
+            {showImageModal && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
                 >
-                    <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg p-6 shadow-2xl">
+                    <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg p-6 shadow-2xl overflow-y-auto">
                         {/* Close button */}
                         <button
                             onClick={() => setShowImageModal(false)}
@@ -172,19 +143,15 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                             </svg>
                         </button>
 
-                        {/* Large image */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={word.strokeOrderGifUrl}
-                            alt="Stroke Order - Large View"
-                            className="max-w-full max-h-[70vh] object-contain mx-auto"
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                        <div className="flex flex-col items-center w-full">
+                            {/* Interactive Hanzi Player (Multi-char Animation) */}
+                            <HanziPlayer char={word.char} />
 
-                        {/* Image info - LARGER TEXT */}
-                        <div className="text-center mt-6 text-gray-700">
-                            <p className="text-5xl font-bold mb-3">{word.char}</p>
-                            <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
+                            {/* Image info - LARGER TEXT */}
+                            <div className="text-center mt-2 text-gray-700">
+                                <p className="text-5xl font-bold mb-3">{word.char}</p>
+                                <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
+                            </div>
                         </div>
                     </div>
                 </div>

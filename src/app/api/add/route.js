@@ -1,75 +1,18 @@
 import { NextResponse } from 'next/server';
-import * as Minio from 'minio';
-
-const minioClient = new Minio.Client({
-    endPoint: process.env.MINIO_ENDPOINT || '192.168.1.13', // Use local IP for upload
-    port: parseInt(process.env.MINIO_PORT || '9000'),
-    useSSL: false, // Cloudflare Tunnel uses HTTP internally
-    accessKey: process.env.MINIO_ACCESS_KEY || 'admin',
-    secretKey: process.env.MINIO_SECRET_KEY || 'admin12345'
-});
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { char, pinyin, thai, tone, meaning, contributor, date, strokeOrderGif } = body;
+        const { char, pinyin, thai, tone, meaning, contributor, date } = body;
 
+        // Validation for required fields
         if (!char || !pinyin || !thai || !meaning) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        let strokeOrderGifUrl = '';
-
-        // Handle MinIO Upload if GIF is provided
-        if (strokeOrderGif && process.env.MINIO_ENABLED === 'true') {
-            try {
-                const base64Data = strokeOrderGif.replace(/^data:image\/\w+;base64,/, "");
-                const buffer = Buffer.from(base64Data, 'base64');
-
-                const bucketName = process.env.MINIO_BUCKET_NAME || 'image';
-                const filename = `${pinyin}_${Date.now()}.gif`;
-
-                const uploadPromise = async () => {
-                    const bucketExists = await minioClient.bucketExists(bucketName);
-
-                    if (!bucketExists) {
-                        await minioClient.makeBucket(bucketName, 'us-east-1');
-
-                        const policy = {
-                            Version: '2012-10-17',
-                            Statement: [{
-                                Effect: 'Allow',
-                                Principal: { AWS: ['*'] },
-                                Action: ['s3:GetObject'],
-                                Resource: [`arn:aws:s3:::${bucketName}/*`]
-                            }]
-                        };
-
-                        await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
-                    }
-
-                    await minioClient.putObject(bucketName, filename, buffer, buffer.length, {
-                        'Content-Type': 'image/gif'
-                    });
-
-                    // Generate public URL using domain (for external access)
-                    const publicDomain = process.env.MINIO_PUBLIC_URL || 'minio.ovenx.shop';
-                    const url = `https://${publicDomain}/${bucketName}/${filename}`;
-                    return url;
-                };
-
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Upload timeout')), 30000)
-                );
-
-                strokeOrderGifUrl = await Promise.race([uploadPromise(), timeoutPromise]);
-                console.log('[Upload] Success:', strokeOrderGifUrl);
-
-            } catch (err) {
-                console.error('[Upload] Error:', err.message);
-                strokeOrderGifUrl = '';
-            }
-        }
+        // We don't handle file uploads here anymore.
+        // Frontend will generate stroke order URL dynamically from 'char'.
+        // We might still send an empty string or the dynamic URL to Google Sheets if it expects an 'image' column.
 
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhHw0FhGw32Vjp_kAu3WZX5b-QEYvLxKoZFoDEyN2MwNLJ5O7d9cL9v_P0WkIni4lOaA/exec';
 
@@ -78,10 +21,22 @@ export async function POST(request) {
         }
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
         try {
-            const payload = { char, pinyin, thai, tone, meaning, contributor, image: strokeOrderGifUrl, date };
+            // We still pass 'image' as empty string or potentially the generated URL if we wanted to persist it.
+            // But for now, let's pass a placeholder or empty since the frontend handles logic.
+            // To ensure compatibility with existing sheet structure, we send an empty string for local image URL.
+            const payload = {
+                char,
+                pinyin,
+                thai,
+                tone,
+                meaning,
+                contributor,
+                image: '', // No uploaded image
+                date
+            };
 
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
