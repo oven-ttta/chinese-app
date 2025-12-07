@@ -30,25 +30,29 @@ export async function POST(request) {
                 const bucketName = process.env.MINIO_BUCKET_NAME || 'image';
                 const filename = `${pinyin}_${Date.now()}.gif`;
 
-                // Check and create bucket if needed
-                const bucketExists = await minioClient.bucketExists(bucketName);
-                if (!bucketExists) {
-                    await minioClient.makeBucket(bucketName, 'us-east-1'); // Region doesn't matter much for self-hosted
-                    // Set public policy if needed, but for now assuming public read or handling via presigned (but user wants public link likely)
-                    // Just setting a simple public read policy is complex via code, assuming bucket is public or we construct public URL
-                }
+                // Create a promise for the upload
+                const uploadPromise = async () => {
+                    const bucketExists = await minioClient.bucketExists(bucketName);
+                    if (!bucketExists) {
+                        await minioClient.makeBucket(bucketName, 'us-east-1');
+                    }
+                    await minioClient.putObject(bucketName, filename, buffer, {
+                        'Content-Type': 'image/gif'
+                    });
+                    return `https://${process.env.MINIO_ENDPOINT}/${bucketName}/${filename}`;
+                };
 
-                await minioClient.putObject(bucketName, filename, buffer, {
-                    'Content-Type': 'image/gif'
-                });
+                // Race against a 30-second timeout
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('MinIO upload timed out')), 30000)
+                );
 
-                // Construct URL
-                strokeOrderGifUrl = `https://${process.env.MINIO_ENDPOINT}/${bucketName}/${filename}`;
+                strokeOrderGifUrl = await Promise.race([uploadPromise(), timeoutPromise]);
                 console.log("Uploaded GIF to:", strokeOrderGifUrl);
 
             } catch (err) {
-                console.error("MinIO Upload Error:", err);
-                // Continue without image or fail? Continue is safer for now.
+                console.error("MinIO Upload Error:", err.message);
+                throw new Error("Failed to upload image: " + err.message);
             }
         }
 
@@ -64,7 +68,8 @@ export async function POST(request) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ char, pinyin, thai, tone, meaning, contributor, date, image: strokeOrderGifUrl }),
+            // Include date and image mapped correctly to columns
+            body: JSON.stringify({ char, pinyin, thai, tone, meaning, contributor, image: strokeOrderGifUrl, date }),
         });
 
         if (!response.ok) {

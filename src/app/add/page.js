@@ -91,7 +91,7 @@ export default function AddWord() {
                             required
                             value={formData.char}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
                             placeholder="เช่น 饭"
                         />
                     </div>
@@ -107,7 +107,7 @@ export default function AddWord() {
                             required
                             value={formData.pinyin}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
                             placeholder="เช่น fàn"
                         />
                     </div>
@@ -123,7 +123,7 @@ export default function AddWord() {
                             required
                             value={formData.thai}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
                             placeholder="เช่น ฟ่าน"
                         />
                     </div>
@@ -138,7 +138,7 @@ export default function AddWord() {
                             id="tone"
                             value={formData.tone}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
                             placeholder="เช่น เสียง 4"
                         />
                     </div>
@@ -154,7 +154,7 @@ export default function AddWord() {
                             rows="3"
                             value={formData.meaning}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
                             placeholder="เช่น ข้าว, อาหาร"
                         />
                     </div>
@@ -169,7 +169,7 @@ export default function AddWord() {
                             required
                             value={formData.contributor}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border text-gray-700"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border text-gray-900"
                         >
                             <option value="">เลือกผู้บันทึก (Select Contributor)</option>
                             <option value="โอ">โอ</option>
@@ -192,7 +192,7 @@ export default function AddWord() {
                                 setFormData(prev => ({ ...prev, date: formattedDate }));
                             }}
                             dateFormat="yyyy-MM-dd"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
                             placeholderText="Select date"
                             isClearable
                             required
