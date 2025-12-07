@@ -1,18 +1,72 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import PinyinCard from '@/components/PinyinCard';
 
 export default function PinyinPage() {
     const [activeId, setActiveId] = useState(null);
+    const synthRef = useRef(null);
 
-    const handlePlay = (id) => {
+    // Initialize Synthesis once
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            synthRef.current = window.speechSynthesis;
+        }
+        // Cleanup on unmount
+        return () => {
+            if (synthRef.current) synthRef.current.cancel();
+        };
+    }, []);
+
+    const speakThai = (text, id) => {
+        if (!synthRef.current) return;
+
+        // 1. STOP previous sound immediately
+        synthRef.current.cancel();
+
+        // 2. Set Active State
         setActiveId(id);
+
+        // 3. Prepare Utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'th-TH'; // Force Thai Language
+        utterance.rate = 0.9; // Slightly slower for clarity
+
+        // Find a Thai voice if available (optional, browsers usually default correctly for th-TH)
+        const voices = synthRef.current.getVoices();
+        const thaiVoice = voices.find(v => v.lang.includes('th'));
+        if (thaiVoice) utterance.voice = thaiVoice;
+
+        utterance.onend = () => {
+            setActiveId(null);
+        };
+
+        utterance.onerror = () => {
+            setActiveId(null);
+        };
+
+        // 4. Speak
+        synthRef.current.speak(utterance);
     };
 
-    const handleStop = () => {
-        setActiveId(null);
+    const handlePlay = (item) => {
+        // Extract text inside parentheses for Thai reading
+        // E.g., "b (ปัว)" -> "ปัว"
+        // E.g., "เสียง 1 (High)" -> "เสียง 1 High" (We can clean this)
+
+        let textToRead = item.label;
+
+        // Try to capture text inside (...)
+        const match = item.label.match(/\(([^)]+)\)/);
+        if (match && match[1]) {
+            textToRead = match[1];
+        }
+
+        // Special cleanup for Tones if needed, otherwise "High" is read in Thai accent which is funny but okay
+        // Or we can map specific IDs to specific Thai words if needed.
+
+        speakThai(textToRead, item.id);
     };
 
     const initials = [
@@ -78,7 +132,7 @@ export default function PinyinPage() {
                         ตารางพินอิน <span className="text-blue-600">Pinyin Chart</span>
                     </h1>
                     <p className="text-lg text-slate-600">
-                        ฝึกอ่านออกเสียงพยัญชนะ สระ และวรรณยุกต์ (Initials, Vowels, Tones)
+                        ฝึกอ่านออกเสียงพยัญชนะ สระ และวรรณยุกต์ (ไทย)
                     </p>
                     <div className="mt-6">
                         <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center gap-2">
@@ -103,8 +157,7 @@ export default function PinyinPage() {
                                 label={item.label}
                                 colorClass={item.color}
                                 isActive={activeId === item.id}
-                                onPlay={() => handlePlay(item.id)}
-                                onStop={handleStop}
+                                onPlay={() => handlePlay(item)}
                             />
                         ))}
                     </div>
@@ -123,8 +176,7 @@ export default function PinyinPage() {
                                 label={item.label}
                                 colorClass={item.color}
                                 isActive={activeId === item.id}
-                                onPlay={() => handlePlay(item.id)}
-                                onStop={handleStop}
+                                onPlay={() => handlePlay(item)}
                             />
                         ))}
                     </div>
@@ -143,8 +195,7 @@ export default function PinyinPage() {
                                 label={item.label}
                                 colorClass={item.color}
                                 isActive={activeId === item.id}
-                                onPlay={() => handlePlay(item.id)}
-                                onStop={handleStop}
+                                onPlay={() => handlePlay(item)}
                             />
                         ))}
                     </div>
