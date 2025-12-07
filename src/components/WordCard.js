@@ -7,19 +7,16 @@ let currentProxyAudio = null;
 
 export default function WordCard({ word, isActive, onPlay, onStop }) {
     const [voice, setVoice] = useState(null);
+    const [showImageModal, setShowImageModal] = useState(false);
 
     useEffect(() => {
         const loadVoices = () => {
             const voices = window.speechSynthesis.getVoices();
-            // Try to find a Chinese male voice
             const maleVoice = voices.find(v =>
                 (v.lang.includes('zh') || v.lang.includes('CN')) &&
                 (v.name.includes('Male') || v.name.includes('Kangkang') || v.name.includes('Danny'))
             );
-
-            // Fallback to any Chinese voice
             const anyChineseVoice = voices.find(v => v.lang === 'zh-CN' || v.lang === 'zh');
-
             setVoice(maleVoice || anyChineseVoice);
         };
 
@@ -48,114 +45,150 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                 onStop();
             };
             currentAudio.onerror = (e) => {
-                console.error("Proxy Audio Error:", e);
+                console.error('Proxy TTS error:', e);
                 currentProxyAudio = null;
                 onStop();
             };
 
-            currentAudio.play().catch(e => {
-                console.error("Proxy Audio Play Error:", e);
+            currentAudio.play().catch(err => {
+                console.error('Proxy play error:', err);
                 currentProxyAudio = null;
                 onStop();
             });
         };
 
-        if (isActive) {
-            // Stop any lingering audio first (safety net)
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+        const playLocal = () => {
+            utterance = new SpeechSynthesisUtterance(word.char);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.8;
+            utterance.pitch = 0.9;
+
+            if (voice) {
+                utterance.voice = voice;
             }
+
+            utterance.onend = () => {
+                onStop();
+            };
+
+            utterance.onerror = (e) => {
+                console.error('Speech synthesis error:', e);
+                onStop();
+            };
+
+            window.speechSynthesis.speak(utterance);
+        };
+
+        if (isActive) {
             if (currentProxyAudio) {
                 currentProxyAudio.pause();
                 currentProxyAudio = null;
             }
+            window.speechSynthesis.cancel();
 
-            if ('speechSynthesis' in window) {
-                // If we have a voice, try browser TTS
-                if (voice) {
-                    utterance = new SpeechSynthesisUtterance(word.char);
-                    utterance.lang = 'zh-CN';
-                    utterance.voice = voice;
-                    utterance.rate = 0.8;
-
-                    utterance.onend = () => onStop();
-                    utterance.onerror = (e) => {
-                        console.warn("Browser TTS failed, trying proxy...", e);
-                        // If TTS fails, try proxy. 
-                        // Note: This might cause a slight race if cleanup runs, but usually safe.
-                        playProxy();
-                    };
-
-                    window.speechSynthesis.speak(utterance);
-                } else {
-                    // No Chinese voice found, use proxy directly
-                    console.log("No Chinese voice found, using proxy.");
-                    playProxy();
-                }
-            } else {
-                // Browser doesn't support TTS, use proxy
-                playProxy();
-            }
+            playProxy();
         }
 
         return () => {
-            // Cleanup: Stop audio when isActive becomes false or component unmounts
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
             if (utterance) {
                 window.speechSynthesis.cancel();
             }
-            if (currentAudio) {
-                currentAudio.pause();
-                if (currentProxyAudio === currentAudio) {
-                    currentProxyAudio = null;
-                }
-            }
         };
-    }, [isActive, word]); // Intentionally omitting voice to avoid restart on voice load
+    }, [isActive, word.char, voice, onStop]);
 
     const handleClick = () => {
-        if (isActive) {
-            onStop();
-        } else {
-            onPlay();
-        }
+        onPlay(word.id);
     };
 
     return (
-        <div
-            onClick={handleClick}
-            className={`bg-white rounded-xl shadow-sm p-2 cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md border relative overflow-hidden group h-full flex flex-col justify-between ${isActive ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-100 hover:border-blue-300'}`}
-        >
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-12 h-12 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-
-            <div className="relative z-10 text-center flex flex-col items-center h-full">
-                <div className="mb-1 w-full">
-                    <div className="text-3xl font-bold text-gray-800 mb-0.5 font-sans transition-colors group-hover:text-blue-600 break-words leading-tight">{word.char}</div>
-                    <div className="text-sm text-gray-600 font-medium leading-none" style={{ fontFamily: 'Arial, sans-serif' }}>{word.pinyin}</div>
-                </div>
-
-                <div className="w-full mt-1 flex-grow flex flex-col justify-end">
-                    <div className="text-xs text-gray-700 font-medium truncate">{word.thai}</div>
-                    {/* Tone and Meaning might be too much for 100x100, hiding tone visually or making it tiny, showing meaning in tooltip or very small */}
-                    <div className="hidden">{word.tone}</div>
+        <>
+            <div
+                onClick={handleClick}
+                className="group relative bg-gradient-to-br from-white to-blue-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-blue-100 hover:border-blue-300 p-3 h-32 overflow-hidden flex items-center justify-between"
+            >
+                {/* Left side - Text content */}
+                <div className="flex-1 flex flex-col justify-center min-w-0 pr-2">
+                    <div className="text-3xl font-bold text-gray-800 mb-0.5 font-sans transition-colors group-hover:text-blue-600 break-words leading-tight">
+                        {word.char}
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium leading-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+                        {word.pinyin}
+                    </div>
+                    <div className="text-xs text-gray-700 font-medium truncate mt-1">
+                        {word.thai}
+                    </div>
                     <div className="text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
                         {word.meaning}
                     </div>
-                    {word.strokeOrderGifUrl && (
-                        <div className="mt-1 flex justify-center">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={word.strokeOrderGifUrl} alt="Stroke Order" className="h-8 w-8 object-contain" />
-                        </div>
-                    )}
                 </div>
 
-                {/* Speaker Icon hint */}
-                <div className={`absolute top-1 right-1 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'animate-pulse opacity-100' : ''}`}>
+                {/* Right side - Image */}
+                {word.strokeOrderGifUrl && (
+                    <div
+                        className="flex-shrink-0 w-24 h-24 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowImageModal(true);
+                        }}
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={word.strokeOrderGifUrl}
+                            alt="Stroke Order"
+                            className="max-w-full max-h-full object-contain rounded border border-gray-200 shadow-sm"
+                            onError={(e) => {
+                                console.error('Image load error:', word.strokeOrderGifUrl);
+                                e.target.style.display = 'none';
+                            }}
+                        />
+                    </div>
+                )}
+
+                {/* Speaker Icon */}
+                <div className={`absolute top-2 left-2 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'animate-pulse opacity-100' : ''}`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                     </svg>
                 </div>
             </div>
-        </div>
+
+            {/* Image Modal */}
+            {showImageModal && word.strokeOrderGifUrl && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+                >
+                    <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg p-6 shadow-2xl">
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowImageModal(false)}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 bg-white rounded-full p-2 shadow-md z-10"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        {/* Large image */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={word.strokeOrderGifUrl}
+                            alt="Stroke Order - Large View"
+                            className="max-w-full max-h-[70vh] object-contain mx-auto"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+
+                        {/* Image info - LARGER TEXT */}
+                        <div className="text-center mt-6 text-gray-700">
+                            <p className="text-5xl font-bold mb-3">{word.char}</p>
+                            <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }

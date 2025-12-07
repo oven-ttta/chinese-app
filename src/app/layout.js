@@ -1,5 +1,6 @@
 import { Kanit, Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
 
 const kanit = Kanit({
   variable: "--font-kanit",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
         className={`${kanit.variable} ${notoSansSC.variable} antialiased`}
         style={{ fontFamily: 'var(--font-kanit), var(--font-noto-sans-sc), sans-serif' }}
       >
+        <Navbar />
         {children}
       </body>
     </html>

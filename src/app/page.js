@@ -139,57 +139,19 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 selection:bg-blue-100">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 space-y-4">
-          <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight sm:text-6xl">
-            เรียนภาษาจีน <span className="text-blue-600">Chinese</span>
-          </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            ฝึกอ่านและฟังเสียงภาษาจีนพื้นฐาน (Basic Chinese Vocabulary)
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
-            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm text-sm text-slate-500 border border-slate-200">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-              </svg>
-              <span>กดที่การ์ดเพื่อฟังเสียง (Click card to listen)</span>
-            </div>
-
-            <a href="/pinyin" className="inline-flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full shadow-sm text-sm text-amber-700 border border-amber-200 hover:bg-amber-200 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-              </svg>
-              <span>ตารางพินอิน (Pinyin Chart)</span>
-            </a>
-          </div>
-
-          <div className="mt-6 flex justify-center gap-4">
-            <a href="/add" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              เพิ่มคำศัพท์ใหม่ (Add Word)
-            </a>
-            <a href="/report" className="inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-              </svg>
-              สรุปข้อมูล (Report)
-            </a>
-          </div>
-        </div>
 
         {/* Filters */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
           {/* Vowel Filter */}
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <label htmlFor="vowel-select" className="text-sm font-semibold text-slate-700 whitespace-nowrap">
+            <label htmlFor="vowel-select" className="text-sm font-bold text-slate-900 whitespace-nowrap">
               สระ (Vowel):
             </label>
             <select
               id="vowel-select"
               value={selectedVowel}
               onChange={(e) => setSelectedVowel(e.target.value)}
-              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-slate-50"
+              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base text-slate-900 font-medium border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white shadow-sm"
             >
               {vowels.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -201,14 +163,14 @@ export default function Home() {
 
           {/* Tone Filter */}
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <label htmlFor="tone-select" className="text-sm font-semibold text-slate-700 whitespace-nowrap">
+            <label htmlFor="tone-select" className="text-sm font-bold text-slate-900 whitespace-nowrap">
               วรรณยุกต์ (Tone):
             </label>
             <select
               id="tone-select"
               value={selectedTone}
               onChange={(e) => setSelectedTone(e.target.value)}
-              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-slate-50"
+              className="block w-full sm:w-48 pl-3 pr-10 py-2 text-base text-slate-900 font-medium border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white shadow-sm"
             >
               {tones.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -230,10 +192,6 @@ export default function Home() {
             />
           ))}
         </div>
-
-        <footer className="mt-20 text-center text-slate-400 text-sm">
-          <p>Created with Next.js & Tailwind CSS</p>
-        </footer>
       </div>
     </main>
   );
