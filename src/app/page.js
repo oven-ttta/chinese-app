@@ -121,8 +121,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 selection:bg-blue-100">
-      <div className="max-w-7xl mx-auto">
+    <main className="flex-1 h-full bg-slate-50 py-8 px-4 sm:px-8 selection:bg-blue-100">
+      <div className="w-full">
 
         {/* Filters */}
         <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-slate-100 flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">

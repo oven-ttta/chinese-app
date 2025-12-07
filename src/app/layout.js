@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${kanit.variable} ${notoSansSC.variable} antialiased`}
+        className={`${kanit.variable} ${notoSansSC.variable} antialiased flex flex-col min-h-screen`}
         style={{ fontFamily: 'var(--font-kanit), var(--font-noto-sans-sc), sans-serif' }}
       >
         <AlertProvider>

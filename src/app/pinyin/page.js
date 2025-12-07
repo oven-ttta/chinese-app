@@ -71,8 +71,8 @@ export default function PinyinPage() {
     ];
 
     return (
-        <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 selection:bg-blue-100">
-            <div className="max-w-6xl mx-auto">
+        <main className="flex-1 h-full bg-slate-50 py-8 px-4 sm:px-8 selection:bg-blue-100">
+            <div className="w-full">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight sm:text-5xl mb-4">
                         ตารางพินอิน <span className="text-blue-600">Pinyin Chart</span>

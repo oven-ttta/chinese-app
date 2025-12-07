@@ -5,7 +5,7 @@ import Link from 'next/link';
 export default function Navbar() {
     return (
         <nav className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
-            <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="w-full px-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                 {/* Logo Section */}
                 <Link href="/" className="text-2xl font-extrabold tracking-tight hover:opacity-90 transition-opacity flex items-center gap-2 group">
                     <span className="text-3xl group-hover:scale-110 transition-transform">🇨🇳</span>
