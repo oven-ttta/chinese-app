@@ -156,26 +156,43 @@ export default function StrokeOrderPage() {
             playHintAnimation();
         } else {
             // Needed to watch ad
-            setAdTimer(5);
+            setAdTimer(5); // Reset timer to 5s
             setShowAd(true);
         }
     };
 
-    // Simulate Ad Timer
+    // Ad Timer & AdSense Trigger
     useEffect(() => {
         let interval;
-        if (showAd && adTimer > 0) {
-            interval = setInterval(() => {
-                setAdTimer((prev) => prev - 1);
-            }, 1000);
-        } else if (showAd && adTimer === 0) {
-            // Ad Finished (Wait briefly then close and unlock)
-            const timeout = setTimeout(() => {
-                setShowAd(false);
-                unlockGlobalHints();
-                playHintAnimation();
-            }, 500);
-            return () => clearTimeout(timeout);
+        if (showAd) {
+            // Trigger AdSense when modal opens
+            try {
+                // Ensure we only push once per show session reset
+                if (adTimer === 5) {
+                    // Safe push
+                    if (window && window.adsbygoogle) {
+                        try {
+                            window.adsbygoogle.push({});
+                        } catch (e) {/* Ignore if pushed already */ }
+                    }
+                }
+            } catch (e) {
+                console.error("AdSense error", e);
+            }
+
+            if (adTimer > 0) {
+                interval = setInterval(() => {
+                    setAdTimer((prev) => prev - 1);
+                }, 1000);
+            } else if (adTimer === 0) {
+                // Ad Finished
+                const timeout = setTimeout(() => {
+                    setShowAd(false);
+                    unlockGlobalHints();
+                    playHintAnimation();
+                }, 1000); // Give user 1s to see "Finished"
+                return () => clearTimeout(timeout);
+            }
         }
         return () => clearInterval(interval);
     }, [showAd, adTimer]);
@@ -196,7 +213,6 @@ export default function StrokeOrderPage() {
         writer.animateCharacter({
             onComplete: () => {
                 // 3. Restart Quiz (Back to practice)
-                // Use timeout to let user see finished char briefly
                 setTimeout(() => {
                     writer.hideCharacter(); // Clear filled strokes
                     startQuizForWriter(writer); // Restart
@@ -399,26 +415,38 @@ export default function StrokeOrderPage() {
                 </div>
             )}
 
-            {/* Simulated Ad Modal */}
+            {/* AdSense Modal (Interstitial) */}
             {showAd && (
-                <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center text-white">
-                    <div className="text-3xl font-bold mb-4 animate-pulse">สนับสนุนค่าไฟ...</div>
-                    <div className="bg-gray-800 p-8 rounded-xl max-w-sm w-full text-center border border-gray-700">
-                        <div className="mb-6">
-                            <span className="text-6xl">📺</span>
+                <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center text-white p-4">
+                    <div className="bg-white text-black p-4 rounded-xl w-full max-w-lg shadow-2xl relative">
+                        <div className="text-center mb-4">
+                            <h3 className="text-xl font-bold text-slate-800">Advertisement</h3>
+                            <p className="text-slate-500 text-sm">Wait {adTimer}s to unlock hints</p>
                         </div>
-                        <h3 className="text-xl font-bold mb-2">กำลังเล่นโฆษณา</h3>
-                        <p className="text-gray-400 mb-6">คุณจะได้รับสิทธิ์ดูเฉลยฟรีทุกตัว 30 นาที</p>
 
-                        <div className="text-4xl font-mono font-bold text-amber-500 mb-2">
-                            {adTimer}s
+                        {/* Adsense Placement */}
+                        <div className="flex justify-center items-center bg-slate-100 min-h-[250px] rounded-lg overflow-hidden mb-4 border border-slate-200">
+                            <ins className="adsbygoogle"
+                                style={{ display: 'block', width: '300px', height: '250px' }}
+                                data-ad-client="ca-pub-6059901629514213"
+                                data-ad-slot="8235863029"
+                                data-ad-format="auto"
+                                data-full-width-responsive="true">
+                            </ins>
                         </div>
-                        <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+
+                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mb-2">
                             <div
                                 className="bg-amber-500 h-full transition-all duration-1000 ease-linear"
                                 style={{ width: `${(5 - adTimer) * 20}%` }}
                             ></div>
                         </div>
+
+                        {adTimer === 0 && (
+                            <p className="text-center text-green-600 font-bold animate-bounce">
+                                Unlocking...
+                            </p>
+                        )}
                     </div>
                 </div>
             )}

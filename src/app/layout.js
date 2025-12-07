@@ -33,6 +33,12 @@ export default function RootLayout({ children }) {
           async
           src="https://www.googletagmanager.com/gtag/js?id=AW-17579997185"
         />
+        {/* Google AdSense (Revenue) */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6059901629514213"
+          crossOrigin="anonymous"
+        />
         <Script id="google-analytics">
           {`
             window.dataLayer = window.dataLayer || [];
