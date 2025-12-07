@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { useAlert } from '@/providers/AlertProvider';
 
 export default function AddWord() {
     const router = useRouter();
+    const { addAlert } = useAlert();
     const [formData, setFormData] = useState({
         char: '',
         pinyin: '',
@@ -44,12 +46,12 @@ export default function AddWord() {
                 throw new Error('Failed to add word');
             }
 
-            alert('เพิ่มคำศัพท์เรียบร้อยแล้ว (Added successfully)');
+            addAlert('เพิ่มคำศัพท์เรียบร้อยแล้ว (Added successfully)', 'success');
             router.push('/');
             router.refresh();
         } catch (error) {
             console.error('Error:', error);
-            alert('เกิดข้อผิดพลาด (Error adding word)');
+            addAlert('เกิดข้อผิดพลาด (Error adding word)', 'error');
         } finally {
             setIsSubmitting(false);
         }
