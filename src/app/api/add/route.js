@@ -24,6 +24,8 @@ export async function POST(request) {
         // Handle MinIO Upload if GIF is provided
         if (strokeOrderGif && process.env.MINIO_ENABLED === 'true') {
             try {
+                console.log(`Starting MinIO Upload to ${process.env.MINIO_ENDPOINT} (Bucket: ${process.env.MINIO_BUCKET_NAME})`);
+
                 // Remove data:image/gif;base64, prefix
                 const base64Data = strokeOrderGif.replace(/^data:image\/\w+;base64,/, "");
                 const buffer = Buffer.from(base64Data, 'base64');
@@ -32,23 +34,23 @@ export async function POST(request) {
 
                 // Create a promise for the upload
                 const uploadPromise = async () => {
-                    const bucketExists = await minioClient.bucketExists(bucketName);
-                    if (!bucketExists) {
-                        await minioClient.makeBucket(bucketName, 'us-east-1');
-                    }
+                    // Optimized: Skip bucketExists check for speed. If bucket missing, it will throw.
+                    // await minioClient.bucketExists(bucketName);
+                    // if (!bucketExists) ...
+
                     await minioClient.putObject(bucketName, filename, buffer, {
                         'Content-Type': 'image/gif'
                     });
                     return `https://${process.env.MINIO_ENDPOINT}/${bucketName}/${filename}`;
                 };
 
-                // Race against a 30-second timeout
+                // Race against a 20-second timeout
                 const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('MinIO upload timed out')), 30000)
+                    setTimeout(() => reject(new Error('MinIO upload timed out (>20s)')), 20000)
                 );
 
                 strokeOrderGifUrl = await Promise.race([uploadPromise(), timeoutPromise]);
-                console.log("Uploaded GIF to:", strokeOrderGifUrl);
+                console.log("Uploaded GIF success:", strokeOrderGifUrl);
 
             } catch (err) {
                 console.error("MinIO Upload Error (Non-fatal, proceeding to save text):", err.message);
@@ -66,22 +68,39 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Please configure the Google Script URL in src/app/api/add/route.js' }, { status: 500 });
         }
 
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            // Include date and image mapped correctly to columns
-            body: JSON.stringify({ char, pinyin, thai, tone, meaning, contributor, image: strokeOrderGifUrl, date }),
-        });
+        // Add timeout for Google Script Fetch (avoid hanging indefinitely)
+        // Set to 15 seconds to allow for script execution time
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        if (!response.ok) {
-            throw new Error('Failed to send data to Google Sheet');
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Include date and image mapped correctly to columns
+                body: JSON.stringify({ char, pinyin, thai, tone, meaning, contributor, image: strokeOrderGifUrl, date }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to send data to Google Sheet: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            return NextResponse.json({ success: true, result });
+
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            console.error("Google Script Fetch Error:", fetchError);
+            return NextResponse.json({
+                error: 'Failed to contact Google Sheet. Please check the URL and deployment.',
+                details: fetchError.message
+            }, { status: 502 });
         }
-
-        const result = await response.json();
-
-        return NextResponse.json({ success: true, result });
     } catch (error) {
         console.error('Error saving word:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
