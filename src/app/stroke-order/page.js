@@ -240,8 +240,6 @@ export default function StrokeOrderPage() {
                 strokeColor: '#333333',
             });
 
-            // div.onclick = () => writer.animateCharacter(); // Disabled per user request
-
             writersRef.current.push(writer);
 
             const controlsDiv = document.createElement('div');
@@ -368,9 +366,7 @@ export default function StrokeOrderPage() {
                         <div className="flex justify-center mb-6">
                             <div
                                 id="quiz-writer-target"
-                                className="border-4 border-dashed border-slate-200 rounded-xl bg-slate-50 cursor-pointer hover:border-blue-300 transition-colors"
-                                onClick={handleHintClick} // Click wrapper also triggers hint/ad
-                                title="คลิกเพื่อดูเฉลย (Click for Hint)"
+                                className="border-4 border-dashed border-slate-200 rounded-xl bg-slate-50 transition-colors"
                             ></div>
                         </div>
 
