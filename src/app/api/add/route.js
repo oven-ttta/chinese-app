@@ -3,7 +3,7 @@ import * as Minio from 'minio';
 
 const minioClient = new Minio.Client({
     endPoint: process.env.MINIO_ENDPOINT || 'minio.ovenx.shop',
-    port: 443,
+    port: parseInt(process.env.MINIO_PORT || '9000'),
     useSSL: process.env.MINIO_SECURE === 'true',
     accessKey: process.env.MINIO_ACCESS_KEY || 'admin',
     secretKey: process.env.MINIO_SECRET_KEY || 'admin12345'
@@ -23,27 +23,16 @@ export async function POST(request) {
         // Handle MinIO Upload if GIF is provided
         if (strokeOrderGif && process.env.MINIO_ENABLED === 'true') {
             try {
-                console.log('[Upload] Starting MinIO upload...');
-                console.log('[Upload] GIF data length:', strokeOrderGif.length);
-
-                // Remove data:image/gif;base64, prefix
                 const base64Data = strokeOrderGif.replace(/^data:image\/\w+;base64,/, "");
-                console.log('[Upload] Base64 length after cleanup:', base64Data.length);
-
-                // Convert Base64 to Binary Buffer (ถูกต้อง!)
                 const buffer = Buffer.from(base64Data, 'base64');
-                console.log('[Upload] Buffer size:', buffer.length, 'bytes');
 
                 const bucketName = process.env.MINIO_BUCKET_NAME || 'image';
                 const filename = `${pinyin}_${Date.now()}.gif`;
-                console.log('[Upload] Target:', `${bucketName}/${filename}`);
 
                 const uploadPromise = async () => {
                     const bucketExists = await minioClient.bucketExists(bucketName);
-                    console.log('[Upload] Bucket exists:', bucketExists);
 
                     if (!bucketExists) {
-                        console.log('[Upload] Creating bucket...');
                         await minioClient.makeBucket(bucketName, 'us-east-1');
 
                         const policy = {
@@ -57,17 +46,15 @@ export async function POST(request) {
                         };
 
                         await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
-                        console.log('[Upload] Bucket created and policy set');
                     }
 
-                    console.log('[Upload] Uploading to MinIO...');
-                    // Upload Binary Buffer (ไม่ใช่ Base64!)
                     await minioClient.putObject(bucketName, filename, buffer, buffer.length, {
                         'Content-Type': 'image/gif'
                     });
 
-                    const url = `https://${process.env.MINIO_ENDPOINT}/${bucketName}/${filename}`;
-                    console.log('[Upload] Success! URL:', url);
+                    // Generate public URL (always use HTTPS for domain)
+                    const endpoint = process.env.MINIO_ENDPOINT || 'minio.ovenx.shop';
+                    const url = `https://${endpoint}/${bucketName}/${filename}`;
                     return url;
                 };
 
@@ -76,14 +63,12 @@ export async function POST(request) {
                 );
 
                 strokeOrderGifUrl = await Promise.race([uploadPromise(), timeoutPromise]);
+                console.log('[Upload] Success:', strokeOrderGifUrl);
 
             } catch (err) {
                 console.error('[Upload] Error:', err.message);
-                console.error('[Upload] Stack:', err.stack);
                 strokeOrderGifUrl = '';
             }
-        } else {
-            console.log('[Upload] Skipped - Enabled:', process.env.MINIO_ENABLED, 'HasGif:', !!strokeOrderGif);
         }
 
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhHw0FhGw32Vjp_kAu3WZX5b-QEYvLxKoZFoDEyN2MwNLJ5O7d9cL9v_P0WkIni4lOaA/exec';
