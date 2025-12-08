@@ -52,16 +52,16 @@ export default function ReportPage() {
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-slate-900">สรุปการบันทึกข้อมูล (Contribution Report)</h1>
-                    <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium">
+        <main className="min-h-screen bg-slate-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+            <div className="w-full">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">สรุปการบันทึกข้อมูล (Report)</h1>
+                    <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base transition-colors">
                         &larr; กลับหน้าหลัก
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {Object.values(stats).map((person) => (
                         <Link
                             href={`/report/${encodeURIComponent(person.name)}`}

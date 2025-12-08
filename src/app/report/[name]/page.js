@@ -62,21 +62,21 @@ export default function ContributorResults() {
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-8">
-                    <Link href="/report" className="text-blue-600 hover:text-blue-800 font-medium mb-4 inline-block">
+        <main className="min-h-screen bg-slate-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+            <div className="w-full">
+                <div className="mb-6 sm:mb-8">
+                    <Link href="/report" className="text-blue-600 hover:text-blue-800 font-medium mb-3 sm:mb-4 inline-block transition-colors">
                         &larr; กลับหน้าสรุป (Back to Report)
                     </Link>
-                    <h1 className="text-3xl font-bold text-slate-900">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 break-words">
                         รายการคำศัพท์ของ: <span className="text-blue-600">{contributorName}</span>
                     </h1>
-                    <p className="text-slate-600 mt-2">
+                    <p className="text-slate-600 mt-2 text-sm sm:text-base">
                         ทั้งหมด {words.length} คำ
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4 lg:gap-6">
                     {words.map((word) => (
                         <WordCard
                             key={word.id}

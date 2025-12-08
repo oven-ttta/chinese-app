@@ -23,6 +23,9 @@ export default function Navbar() {
                     <Link href="/stroke-order" className="hover:text-blue-100 transition-colors py-1.5 px-3 rounded-md hover:bg-white/10">
                         ฝึกเขียน
                     </Link>
+                    <Link href="/report" className="hover:text-blue-100 transition-colors py-1.5 px-3 rounded-md hover:bg-white/10">
+                        สรุป
+                    </Link>
 
                     {/* Primary Action Button */}
                     <Link href="/add" className="bg-white/20 hover:bg-white/30 px-4 py-1.5 rounded-full transition-all flex items-center gap-2 backdrop-blur-sm border border-white/20 hover:border-white/40 shadow-sm active:scale-95">
