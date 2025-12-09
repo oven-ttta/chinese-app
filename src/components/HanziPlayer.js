@@ -96,6 +96,13 @@ export default function HanziPlayer({ char, size = 150, controls = true, loop = 
     }, [char, size, controls, loop]);
 
     const animateAll = async () => {
+        // Speak the character
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(char);
+            utterance.lang = 'zh-CN';
+            window.speechSynthesis.speak(utterance);
+        }
+
         // Manual play logic
         stopLoopRef.current = true; // Stop current auto-loop temporarily if needed, but simple manual play is fine
 
