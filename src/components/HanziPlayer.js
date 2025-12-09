@@ -6,14 +6,41 @@ export default function HanziPlayer({ char, size = 150, controls = true, loop = 
     const containerRef = useRef(null);
     const stopLoopRef = useRef(false);
     const [writers, setWriters] = useState([]);
+    const [isVisible, setIsVisible] = useState(false);
 
+    // 1. Intersection Observer to detect visibility
     useEffect(() => {
+        if (!containerRef.current) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                setIsVisible(true);
+                observer.disconnect(); // Load once and stay loaded
+            }
+        }, {
+            rootMargin: '100px', // Preload slightly before view
+            threshold: 0.01 // Trigger as soon as 1% is visible
+        });
+
+        observer.observe(containerRef.current);
+
+        return () => observer.disconnect();
+    }, []);
+
+    // 2. Initialize Writers only when visible
+    useEffect(() => {
+        if (!isVisible) return; // Wait until visible
+
         let isMounted = true;
         stopLoopRef.current = false;
 
         const loadHanziWriter = async () => {
             if (!window.HanziWriter) {
                 await new Promise((resolve) => {
+                    if (window.HanziWriter) {
+                        resolve();
+                        return;
+                    }
                     const script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js';
                     script.onload = resolve;
@@ -26,6 +53,7 @@ export default function HanziPlayer({ char, size = 150, controls = true, loop = 
         const initWriters = () => {
             if (!containerRef.current) return;
 
+            // Clear previous content to avoid duplicates if re-running
             containerRef.current.innerHTML = '';
             const chars = char.split('');
             const newWriters = [];
@@ -93,7 +121,7 @@ export default function HanziPlayer({ char, size = 150, controls = true, loop = 
             isMounted = false;
             stopLoopRef.current = true; // Stop loop on unmount or char change
         };
-    }, [char, size, controls, loop]);
+    }, [char, size, controls, loop, isVisible]);
 
     const animateAll = async () => {
         // Speak the character
@@ -117,10 +145,14 @@ export default function HanziPlayer({ char, size = 150, controls = true, loop = 
 
     return (
         <div className={`flex flex-col items-center w-full ${!controls ? 'pointer-events-none' : ''}`}>
+            {/* Placeholder/Container that is always rendered to hold space */}
             <div
                 ref={containerRef}
                 className={`w-full flex justify-center ${controls ? 'bg-gray-50 rounded-xl p-4 min-h-[180px]' : ''}`}
-            ></div>
+                style={{ minHeight: controls ? undefined : `${size}px` }}
+            >
+                {/* Fallback while loading or not visible could go here */}
+            </div>
 
             {controls && (
                 <>

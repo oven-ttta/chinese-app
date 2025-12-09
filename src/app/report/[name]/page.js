@@ -91,7 +91,7 @@ export default function ContributorResults() {
 
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 break-words">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 break-all">
                                 รายการคำศัพท์ของ: <span className="text-blue-600">{contributorName}</span>
                             </h1>
                             <p className="text-slate-600 mt-2 text-sm sm:text-base">

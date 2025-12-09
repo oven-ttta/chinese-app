@@ -3,8 +3,22 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+let cache = {
+    data: null,
+    lastFetch: 0
+};
+
 export async function GET() {
     try {
+        const now = Date.now();
+
+        // Return cached data if valid
+        if (cache.data && (now - cache.lastFetch < CACHE_DURATION)) {
+            console.log('[API] Serving from cache');
+            return NextResponse.json(cache.data);
+        }
+
         // 1. Fetch from Google Sheet
         const sheetId = '19J6lDC5t-T1qvOpyO-3hryhClqszLbxwaAPzuejY-1M';
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=2116654352`;
@@ -15,12 +29,17 @@ export async function GET() {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
-            next: { revalidate: 0 } // Ensure Next.js doesn't cache this fetch deeply
+            next: { revalidate: 300 } // Also hint Next.js
         });
 
         if (!response.ok) {
             const text = await response.text();
             console.error(`[API] Google Sheet Error: ${response.status} ${response.statusText}`, text);
+            // If cache exists (even if stale), return it as fallback
+            if (cache.data) {
+                console.warn('[API] Fetch failed, serving stale cache');
+                return NextResponse.json(cache.data);
+            }
             return NextResponse.json(
                 { error: `Google Sheet returned ${response.status}: ${text.substring(0, 100)}` },
                 { status: response.status }
@@ -54,6 +73,11 @@ export async function GET() {
         }).filter(item => item !== null && item.char);
 
         console.log(`[API] Successfully parsed ${sheetWords.length} words.`);
+
+        // Update Cache
+        cache.data = sheetWords;
+        cache.lastFetch = Date.now();
+
         return NextResponse.json(sheetWords);
 
     } catch (error) {
