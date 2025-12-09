@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 
 export default function ReportPage() {
     const [words, setWords] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({});
+    const [selectedDate, setSelectedDate] = useState('All');
 
     useEffect(() => {
         async function fetchData() {
@@ -14,7 +14,6 @@ export default function ReportPage() {
                 const response = await fetch('/api/words', { cache: 'no-store' });
                 const data = await response.json();
                 setWords(data);
-                processStats(data);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -24,8 +23,16 @@ export default function ReportPage() {
         fetchData();
     }, []);
 
-    const processStats = (data) => {
-        const statsByPerson = data.reduce((acc, word) => {
+    const uniqueDates = useMemo(() => {
+        return [...new Set(words.map(w => w.date).filter(Boolean))].sort().reverse();
+    }, [words]);
+
+    const stats = useMemo(() => {
+        const targetWords = selectedDate === 'All'
+            ? words
+            : words.filter(w => w.date === selectedDate);
+
+        return targetWords.reduce((acc, word) => {
             const person = word.contributor || 'ไม่ระบุ (Unknown)';
             if (!acc[person]) {
                 acc[person] = {
@@ -40,8 +47,7 @@ export default function ReportPage() {
             if (word.date) acc[person].dates.add(word.date);
             return acc;
         }, {});
-        setStats(statsByPerson);
-    };
+    }, [words, selectedDate]);
 
     if (loading) {
         return (
@@ -55,7 +61,22 @@ export default function ReportPage() {
         <main className="min-h-screen bg-slate-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
             <div className="w-full">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">สรุปการบันทึกข้อมูล (Report)</h1>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">สรุปการบันทึกข้อมูล (Report)</h1>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-slate-700">วันที่:</span>
+                            <select
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                            >
+                                <option value="All">ทั้งหมด (All Time)</option>
+                                {uniqueDates.map(date => (
+                                    <option key={date} value={date}>{date}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                     <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base transition-colors">
                         &larr; กลับหน้าหลัก
                     </Link>
@@ -64,7 +85,7 @@ export default function ReportPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {Object.values(stats).map((person) => (
                         <Link
-                            href={`/report/${encodeURIComponent(person.name)}`}
+                            href={`/report/${encodeURIComponent(person.name)}?date=${selectedDate}`}
                             key={person.name}
                             className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 block hover:shadow-md transition-shadow cursor-pointer group"
                         >
@@ -105,7 +126,9 @@ export default function ReportPage() {
 
                 {Object.keys(stats).length === 0 && (
                     <div className="text-center py-20 text-slate-400">
-                        ยังไม่มีข้อมูลผู้บันทึก (No contribution data available)
+                        {selectedDate === 'All'
+                            ? 'ยังไม่มีข้อมูลผู้บันทึก (No contribution data available)'
+                            : `ไม่มีข้อมูลสำหรับวันที่ ${selectedDate}`}
                     </div>
                 )}
             </div>
