@@ -14,8 +14,8 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
 
     // Translate Thai to English
     useEffect(() => {
-        if (word.thai) {
-            fetch(`/api/translate?text=${encodeURIComponent(word.thai)}&from=th&to=en`)
+        if (word.meaning) {
+            fetch(`/api/translate?text=${encodeURIComponent(word.meaning)}&from=th&to=en`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.translatedText) {
@@ -27,7 +27,7 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                     setTranslatedEnglish('');
                 });
         }
-    }, [word.thai]);
+    }, [word.meaning]);
 
     useEffect(() => {
         const loadVoices = () => {
@@ -119,10 +119,10 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                         {word.pinyin}
                     </div>
                     <div className="text-xs text-gray-700 font-medium truncate mt-1">
-                        {word.thai}{translatedEnglish ? `-${translatedEnglish}` : ''}
+                        {word.thai}
                     </div>
                     <div className="text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
-                        {word.meaning}
+                        {word.meaning}{translatedEnglish ? ` (${translatedEnglish})` : ''}
                     </div>
                 </div>
 
@@ -168,7 +168,8 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                             {/* Image info - LARGER TEXT */}
                             <div className="text-center mt-2 text-gray-700">
                                 <p className="text-5xl font-bold mb-3">{word.char}</p>
-                                <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}{translatedEnglish ? ` (${translatedEnglish})` : ''}</p>
+                                <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
+                                <p className="text-2xl text-gray-600">{word.meaning} - {translatedEnglish ? ` (${translatedEnglish})` : ''}</p>
                             </div>
                         </div>
                     </div>
