@@ -10,6 +10,24 @@ import HanziPlayer from './HanziPlayer';
 export default function WordCard({ word, isActive, onPlay, onStop }) {
     const [voice, setVoice] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
+    const [translatedEnglish, setTranslatedEnglish] = useState('');
+
+    // Translate Thai to English
+    useEffect(() => {
+        if (word.thai) {
+            fetch(`/api/translate?text=${encodeURIComponent(word.thai)}&from=th&to=en`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.translatedText) {
+                        setTranslatedEnglish(data.translatedText);
+                    }
+                })
+                .catch(err => {
+                    console.error('Translation error:', err);
+                    setTranslatedEnglish('');
+                });
+        }
+    }, [word.thai]);
 
     useEffect(() => {
         const loadVoices = () => {
@@ -101,7 +119,7 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                         {word.pinyin}
                     </div>
                     <div className="text-xs text-gray-700 font-medium truncate mt-1">
-                        {word.thai}
+                        {word.thai}{translatedEnglish ? `-${translatedEnglish}` : ''}
                     </div>
                     <div className="text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
                         {word.meaning}
