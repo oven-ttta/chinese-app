@@ -168,7 +168,7 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                             {/* Image info - LARGER TEXT */}
                             <div className="text-center mt-2 text-gray-700">
                                 <p className="text-5xl font-bold mb-3">{word.char}</p>
-                                <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
+                                <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}{translatedEnglish ? ` (${translatedEnglish})` : ''}</p>
                             </div>
                         </div>
                     </div>
