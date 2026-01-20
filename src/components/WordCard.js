@@ -10,6 +10,24 @@ import HanziPlayer from './HanziPlayer';
 export default function WordCard({ word, isActive, onPlay, onStop }) {
     const [voice, setVoice] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
+    const [translatedEnglish, setTranslatedEnglish] = useState('');
+
+    // Translate Thai to English
+    useEffect(() => {
+        if (word.meaning) {
+            fetch(`/api/translate?text=${encodeURIComponent(word.meaning)}&from=th&to=en`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.translatedText) {
+                        setTranslatedEnglish(data.translatedText);
+                    }
+                })
+                .catch(err => {
+                    console.error('Translation error:', err);
+                    setTranslatedEnglish('');
+                });
+        }
+    }, [word.meaning]);
 
     useEffect(() => {
         const loadVoices = () => {
@@ -103,7 +121,7 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                     <div className="text-[10px] sm:text-xs text-gray-700 font-medium truncate mt-1">
                         {word.thai}
                     </div>
-                    <div className="text-[9px] sm:text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
+                    <div className="text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
                         {word.meaning}
                     </div>
                 </div>
@@ -148,16 +166,9 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                             <HanziPlayer char={word.char} />
 
                             {/* Image info - LARGER TEXT */}
-                            <div className="text-center mt-4 sm:mt-8 space-y-2 sm:space-y-4">
-                                <p className="text-4xl sm:text-6xl font-bold text-gray-800">{word.char}</p>
-                                <div className="space-y-1 sm:space-y-2">
-                                    <p className="text-xl sm:text-3xl font-medium text-blue-600">{word.pinyin}</p>
-                                    <p className="text-base sm:text-xl text-gray-600">
-                                        <span className="font-bold text-gray-900">{word.thai}</span>
-                                        <span className="mx-1 sm:mx-2 text-gray-400">แปลว่า</span>
-                                        <span>{word.meaning}</span>
-                                    </p>
-                                </div>
+                            <div className="text-center mt-2 text-gray-700">
+                                <p className="text-5xl font-bold mb-3">{word.char}</p>
+                                <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
                             </div>
                         </div>
                     </div>
