@@ -121,22 +121,22 @@ export default function Home() {
   }
 
   return (
-    <main className="flex-1 h-full bg-slate-50 py-8 px-4 sm:px-8 selection:bg-blue-100">
+    <main className="flex-1 h-full bg-slate-50 py-4 sm:py-8 px-2 sm:px-4 md:px-8 selection:bg-blue-100">
       <div className="w-full">
 
         {/* Filters */}
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-slate-100 flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
+        <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl shadow-md border border-slate-100 flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-8 md:mb-10">
 
           {/* Vowel Filter */}
-          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-            <label htmlFor="vowel-select" className="text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
+          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+            <label htmlFor="vowel-select" className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
               สระ (Vowel):
             </label>
             <select
               id="vowel-select"
               value={selectedVowel}
               onChange={(e) => setSelectedVowel(e.target.value)}
-              className="block w-full pl-3 pr-10 py-2.5 text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
+              className="block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
             >
               {vowels.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -147,15 +147,15 @@ export default function Home() {
           </div>
 
           {/* Tone Filter */}
-          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-            <label htmlFor="tone-select" className="text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
+          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+            <label htmlFor="tone-select" className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
               วรรณยุกต์ (Tone):
             </label>
             <select
               id="tone-select"
               value={selectedTone}
               onChange={(e) => setSelectedTone(e.target.value)}
-              className="block w-full pl-3 pr-10 py-2.5 text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
+              className="block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
             >
               {tones.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -167,7 +167,7 @@ export default function Home() {
         </div>
 
         {/* Word Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-2 sm:gap-4 md:gap-6 lg:gap-8">
           {filteredWords.map((word) => (
             <WordCard
               key={word.id}

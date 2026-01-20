@@ -123,26 +123,26 @@ export default function AdminPage() {
     };
 
     return (
-        <main className="min-h-screen bg-slate-50 p-4 sm:p-8">
+        <main className="min-h-screen bg-slate-50 p-2 sm:p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-slate-900">จัดการคำศัพท์ (Admin)</h1>
-                    <div className="flex gap-2">
-                        <Link href="/add" className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900">จัดการคำศัพท์ (Admin)</h1>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <Link href="/add" className="flex-1 sm:flex-none text-center bg-green-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-green-700 text-sm sm:text-base">
                             + เพิ่มคำใหม่
                         </Link>
-                        <Link href="/" className="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-md hover:bg-slate-50">
+                        <Link href="/" className="flex-1 sm:flex-none text-center bg-white text-slate-700 border border-slate-300 px-3 sm:px-4 py-2 rounded-md hover:bg-slate-50 text-sm sm:text-base">
                             หน้าหลัก
                         </Link>
                     </div>
                 </div>
 
                 {/* Search */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                     <input
                         type="text"
-                        placeholder="Search by Char, Pinyin, Thai..."
-                        className="w-full p-3 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="ค้นหา..."
+                        className="w-full p-2 sm:p-3 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                     />
@@ -155,36 +155,73 @@ export default function AdminPage() {
                     </div>
                 ) : (
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="overflow-x-auto">
+                        {/* Mobile Card View */}
+                        <div className="block sm:hidden divide-y divide-slate-100">
+                            {filteredWords.map((word, idx) => (
+                                <div key={idx} className="p-3 hover:bg-slate-50">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span className="text-2xl font-bold text-slate-800">{word.char}</span>
+                                            <span className="text-slate-500 text-sm ml-2">{word.pinyin}</span>
+                                        </div>
+                                        <span className="text-slate-400 text-xs">#{word.id}</span>
+                                    </div>
+                                    <p className="text-slate-600 text-sm mb-2">{word.thai}</p>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs text-slate-400">{word.contributor}</span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleEditClick(word)}
+                                                className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                                            >
+                                                แก้ไข
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(word)}
+                                                className="px-3 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100"
+                                            >
+                                                ลบ
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            {filteredWords.length === 0 && (
+                                <div className="p-8 text-center text-slate-400">ไม่พบข้อมูล</div>
+                            )}
+                        </div>
+
+                        {/* Desktop Table View */}
+                        <div className="hidden sm:block overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50 border-b border-slate-200">
                                     <tr>
-                                        <th className="p-4 font-semibold text-slate-600 whitespace-nowrap">ID</th>
-                                        <th className="p-4 font-semibold text-slate-600 whitespace-nowrap">อักษรจีน</th>
-                                        <th className="p-4 font-semibold text-slate-600 whitespace-nowrap">พินอิน</th>
-                                        <th className="p-4 font-semibold text-slate-600 whitespace-nowrap">คำแปล</th>
-                                        <th className="p-4 font-semibold text-slate-600 whitespace-nowrap">ผู้บันทึก</th>
-                                        <th className="p-4 font-semibold text-slate-600 text-right whitespace-nowrap">Actions</th>
+                                        <th className="p-3 md:p-4 font-semibold text-slate-600 whitespace-nowrap text-sm">ID</th>
+                                        <th className="p-3 md:p-4 font-semibold text-slate-600 whitespace-nowrap text-sm">อักษรจีน</th>
+                                        <th className="p-3 md:p-4 font-semibold text-slate-600 whitespace-nowrap text-sm">พินอิน</th>
+                                        <th className="p-3 md:p-4 font-semibold text-slate-600 whitespace-nowrap text-sm">คำแปล</th>
+                                        <th className="p-3 md:p-4 font-semibold text-slate-600 whitespace-nowrap text-sm hidden lg:table-cell">ผู้บันทึก</th>
+                                        <th className="p-3 md:p-4 font-semibold text-slate-600 text-right whitespace-nowrap text-sm">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {filteredWords.map((word, idx) => (
                                         <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                            <td className="p-3 sm:p-4 text-slate-400 text-sm whitespace-nowrap">#{word.id}</td>
-                                            <td className="p-3 sm:p-4 text-lg font-bold text-slate-800 whitespace-nowrap">{word.char}</td>
-                                            <td className="p-3 sm:p-4 text-slate-600 whitespace-nowrap">{word.pinyin}</td>
-                                            <td className="p-3 sm:p-4 text-slate-600 min-w-[150px]">{word.thai}</td>
-                                            <td className="p-3 sm:p-4 text-sm text-slate-500 whitespace-nowrap">{word.contributor}</td>
-                                            <td className="p-3 sm:p-4 text-right space-x-2 whitespace-nowrap">
+                                            <td className="p-2 md:p-4 text-slate-400 text-xs md:text-sm whitespace-nowrap">#{word.id}</td>
+                                            <td className="p-2 md:p-4 text-base md:text-lg font-bold text-slate-800 whitespace-nowrap">{word.char}</td>
+                                            <td className="p-2 md:p-4 text-slate-600 whitespace-nowrap text-sm">{word.pinyin}</td>
+                                            <td className="p-2 md:p-4 text-slate-600 text-sm max-w-[150px] truncate">{word.thai}</td>
+                                            <td className="p-2 md:p-4 text-xs md:text-sm text-slate-500 whitespace-nowrap hidden lg:table-cell">{word.contributor}</td>
+                                            <td className="p-2 md:p-4 text-right space-x-1 md:space-x-2 whitespace-nowrap">
                                                 <button
                                                     onClick={() => handleEditClick(word)}
-                                                    className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                                    className="px-2 md:px-3 py-1 text-xs md:text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(word)}
-                                                    className="px-3 py-1 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                                    className="px-2 md:px-3 py-1 text-xs md:text-sm bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
                                                 >
                                                     Delete
                                                 </button>
@@ -194,7 +231,7 @@ export default function AdminPage() {
                                     {filteredWords.length === 0 && (
                                         <tr>
                                             <td colSpan="6" className="p-8 text-center text-slate-400">
-                                                No words found.
+                                                ไม่พบข้อมูล
                                             </td>
                                         </tr>
                                     )}
@@ -207,86 +244,86 @@ export default function AdminPage() {
 
             {/* Edit Modal */}
             {editingWord && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
-                        <h2 className="text-xl font-bold mb-4 text-slate-800">Edit Word</h2>
-                        <form onSubmit={handleUpdate} className="space-y-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-lg w-full max-w-md p-4 sm:p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                        <h2 className="text-lg sm:text-xl font-bold mb-4 text-slate-800">แก้ไขคำศัพท์</h2>
+                        <form onSubmit={handleUpdate} className="space-y-3 sm:space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Chinese Char</label>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">อักษรจีน</label>
                                 <input
-                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                                     value={editingWord.char}
                                     onChange={e => setEditingWord({ ...editingWord, char: e.target.value })}
                                     required
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-2 sm:gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Pinyin</label>
+                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">พินอิน</label>
                                     <input
-                                        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                                         value={editingWord.pinyin}
                                         onChange={e => setEditingWord({ ...editingWord, pinyin: e.target.value })}
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tone</label>
+                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">วรรณยุกต์</label>
                                     <input
-                                        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                                         value={editingWord.tone || ''}
                                         onChange={e => setEditingWord({ ...editingWord, tone: e.target.value })}
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Thai Trans/Meaning</label>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">คำแปลภาษาไทย</label>
                                 <input
-                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                                     value={editingWord.thai}
                                     onChange={e => setEditingWord({ ...editingWord, thai: e.target.value })}
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Meaning (Details)</label>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">ความหมาย (รายละเอียด)</label>
                                 <textarea
-                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                                     value={editingWord.meaning}
                                     onChange={e => setEditingWord({ ...editingWord, meaning: e.target.value })}
-                                    rows="3"
+                                    rows="2"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Contributor</label>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">ผู้บันทึก</label>
                                 <input
-                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                                     value={editingWord.contributor}
                                     onChange={e => setEditingWord({ ...editingWord, contributor: e.target.value })}
                                 />
                             </div>
 
-                            <div className="flex justify-end gap-3 mt-6">
+                            <div className="flex justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-2 border-t">
                                 <button
                                     type="button"
                                     onClick={() => setEditingWord(null)}
-                                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                                    className="px-3 sm:px-4 py-2 text-slate-600 hover:bg-slate-100 rounded transition-colors text-sm sm:text-base"
                                     disabled={isSaving}
                                 >
-                                    Cancel
+                                    ยกเลิก
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                                    className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2 text-sm sm:text-base"
                                     disabled={isSaving}
                                 >
                                     {isSaving ? (
                                         <>
                                             <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-                                            Saving...
+                                            กำลังบันทึก...
                                         </>
                                     ) : (
-                                        'Save Changes'
+                                        'บันทึก'
                                     )}
                                 </button>
                             </div>

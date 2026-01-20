@@ -125,31 +125,31 @@ export default function PinyinPage() {
     ];
 
     return (
-        <main className="flex-1 h-full bg-slate-50 py-8 px-4 sm:px-8 selection:bg-blue-100">
+        <main className="flex-1 h-full bg-slate-50 py-4 sm:py-8 px-2 sm:px-4 md:px-8 selection:bg-blue-100">
             <div className="w-full">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight sm:text-5xl mb-4">
+                <div className="text-center mb-6 sm:mb-12">
+                    <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-2 sm:mb-4 px-2">
                         ตารางพินอิน <span className="text-blue-600">Pinyin Chart</span>
                     </h1>
-                    <p className="text-lg text-slate-600">
+                    <p className="text-sm sm:text-lg text-slate-600 px-2">
                         ฝึกอ่านออกเสียงพยัญชนะ สระ และวรรณยุกต์ (ไทย)
                     </p>
-                    <div className="mt-6">
-                        <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <div className="mt-4 sm:mt-6">
+                        <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                             </svg>
-                            กลับหน้าหลัก (Back to Home)
+                            กลับหน้าหลัก
                         </Link>
                     </div>
                 </div>
 
                 {/* Initials Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6 border-l-4 border-amber-400 pl-4 flex items-center gap-2">
-                        พยัญชนะ <span className="text-gray-500 text-lg font-normal">(Initials)</span>
+                <section className="mb-8 sm:mb-16">
+                    <h2 className="text-lg sm:text-2xl font-bold text-slate-800 mb-3 sm:mb-6 border-l-4 border-amber-400 pl-3 sm:pl-4 flex items-center gap-1 sm:gap-2">
+                        พยัญชนะ <span className="text-gray-500 text-sm sm:text-lg font-normal">(Initials)</span>
                     </h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
                         {initials.map((item) => (
                             <PinyinCard
                                 key={item.id}
@@ -164,11 +164,11 @@ export default function PinyinPage() {
                 </section>
 
                 {/* Vowels Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6 border-l-4 border-teal-500 pl-4 flex items-center gap-2">
-                        สระเดี่ยว <span className="text-gray-500 text-lg font-normal">(Simple Vowels)</span>
+                <section className="mb-8 sm:mb-16">
+                    <h2 className="text-lg sm:text-2xl font-bold text-slate-800 mb-3 sm:mb-6 border-l-4 border-teal-500 pl-3 sm:pl-4 flex items-center gap-1 sm:gap-2">
+                        สระเดี่ยว <span className="text-gray-500 text-sm sm:text-lg font-normal">(Simple Vowels)</span>
                     </h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
                         {vowels.map((item) => (
                             <PinyinCard
                                 key={item.id}
@@ -183,11 +183,11 @@ export default function PinyinPage() {
                 </section>
 
                 {/* Tones Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6 border-l-4 border-indigo-500 pl-4 flex items-center gap-2">
-                        วรรณยุกต์ <span className="text-gray-500 text-lg font-normal">(Tones)</span>
+                <section className="mb-8 sm:mb-16">
+                    <h2 className="text-lg sm:text-2xl font-bold text-slate-800 mb-3 sm:mb-6 border-l-4 border-indigo-500 pl-3 sm:pl-4 flex items-center gap-1 sm:gap-2">
+                        วรรณยุกต์ <span className="text-gray-500 text-sm sm:text-lg font-normal">(Tones)</span>
                     </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                         {tones.map((item) => (
                             <PinyinCard
                                 key={item.id}

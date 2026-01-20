@@ -82,29 +82,29 @@ export default function ContributorResults() {
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <main className="min-h-screen bg-slate-50 py-4 sm:py-8 md:py-12 px-2 sm:px-4 md:px-6 lg:px-8">
             <div className="w-full">
-                <div className="mb-6 sm:mb-8">
-                    <Link href="/report" className="text-blue-600 hover:text-blue-800 font-medium mb-3 sm:mb-4 inline-block transition-colors">
-                        &larr; กลับหน้าสรุป (Back to Report)
+                <div className="mb-4 sm:mb-6 md:mb-8">
+                    <Link href="/report" className="text-blue-600 hover:text-blue-800 font-medium mb-2 sm:mb-4 inline-block transition-colors text-sm">
+                        &larr; กลับหน้าสรุป
                     </Link>
 
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                    <div className="flex flex-col gap-3 sm:gap-4">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 break-all">
+                            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900 break-all">
                                 รายการคำศัพท์ของ: <span className="text-blue-600">{contributorName}</span>
                             </h1>
-                            <p className="text-slate-600 mt-2 text-sm sm:text-base">
+                            <p className="text-slate-600 mt-1 sm:mt-2 text-xs sm:text-sm md:text-base">
                                 ทั้งหมด {displayedWords.length} คำ {selectedDate !== 'All' ? `(จาก ${words.length} คำ)` : ''}
                             </p>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-slate-700">วันที่:</span>
+                            <span className="text-xs sm:text-sm font-medium text-slate-700">วันที่:</span>
                             <select
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                                className="border border-slate-300 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                             >
                                 <option value="All">ทั้งหมด (All Time)</option>
                                 {uniqueDates.map(date => (
@@ -115,7 +115,7 @@ export default function ContributorResults() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4 lg:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
                     {displayedWords.map((word) => (
                         <WordCard
                             key={word.id}

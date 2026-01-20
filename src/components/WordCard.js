@@ -90,27 +90,27 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
         <>
             <div
                 onClick={handleClick}
-                className="group relative bg-gradient-to-br from-white to-blue-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-blue-100 hover:border-blue-300 p-3 h-32 overflow-hidden flex items-center justify-between"
+                className="group relative bg-gradient-to-br from-white to-blue-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-blue-100 hover:border-blue-300 p-2 sm:p-3 h-28 sm:h-32 overflow-hidden flex items-center justify-between"
             >
                 {/* Left side - Text content */}
-                <div className="flex-1 flex flex-col justify-center min-w-0 pr-2">
-                    <div className="text-3xl font-bold text-gray-800 mb-0.5 font-sans transition-colors group-hover:text-blue-600 break-words leading-tight">
+                <div className="flex-1 flex flex-col justify-center min-w-0 pr-1 sm:pr-2">
+                    <div className="text-2xl sm:text-3xl font-bold text-gray-800 mb-0.5 font-sans transition-colors group-hover:text-blue-600 break-words leading-tight">
                         {word.char}
                     </div>
-                    <div className="text-sm text-gray-600 font-medium leading-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    <div className="text-xs sm:text-sm text-gray-600 font-medium leading-none" style={{ fontFamily: 'Arial, sans-serif' }}>
                         {word.pinyin}
                     </div>
-                    <div className="text-xs text-gray-700 font-medium truncate mt-1">
+                    <div className="text-[10px] sm:text-xs text-gray-700 font-medium truncate mt-1">
                         {word.thai}
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
+                    <div className="text-[9px] sm:text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
                         {word.meaning}
                     </div>
                 </div>
 
                 {/* Right side - Hanzi Writer Preview (Vector SVG) */}
                 <div
-                    className="flex-shrink-0 w-24 h-24 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity bg-white rounded border border-gray-200 overflow-hidden p-1"
+                    className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity bg-white rounded border border-gray-200 overflow-hidden p-1"
                     onClick={(e) => {
                         e.stopPropagation();
                         setShowImageModal(true);
@@ -120,8 +120,8 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                 </div>
 
                 {/* Speaker Icon */}
-                <div className={`absolute top-2 left-2 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'animate-pulse opacity-100' : ''}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className={`absolute top-1.5 left-1.5 sm:top-2 sm:left-2 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'animate-pulse opacity-100' : ''}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                     </svg>
                 </div>
@@ -130,15 +130,15 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
             {/* Image Modal */}
             {showImageModal && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-2 sm:p-4"
                 >
-                    <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg p-6 shadow-2xl overflow-y-auto">
+                    <div className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] bg-white rounded-lg p-3 sm:p-6 shadow-2xl overflow-y-auto">
                         {/* Close button */}
                         <button
                             onClick={() => setShowImageModal(false)}
-                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 bg-white rounded-full p-2 shadow-md z-10"
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1.5 sm:p-2 shadow-md z-10"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -148,9 +148,16 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                             <HanziPlayer char={word.char} />
 
                             {/* Image info - LARGER TEXT */}
-                            <div className="text-center mt-2 text-gray-700">
-                                <p className="text-5xl font-bold mb-3">{word.char}</p>
-                                <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
+                            <div className="text-center mt-4 sm:mt-8 space-y-2 sm:space-y-4">
+                                <p className="text-4xl sm:text-6xl font-bold text-gray-800">{word.char}</p>
+                                <div className="space-y-1 sm:space-y-2">
+                                    <p className="text-xl sm:text-3xl font-medium text-blue-600">{word.pinyin}</p>
+                                    <p className="text-base sm:text-xl text-gray-600">
+                                        <span className="font-bold text-gray-900">{word.thai}</span>
+                                        <span className="mx-1 sm:mx-2 text-gray-400">แปลว่า</span>
+                                        <span>{word.meaning}</span>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -324,42 +324,44 @@ export default function StrokeOrderPage() {
     };
 
     return (
-        <main className="flex-1 h-full bg-slate-50 py-8 px-4 sm:px-8 selection:bg-blue-100">
+        <main className="flex-1 h-full bg-slate-50 py-4 sm:py-8 px-2 sm:px-4 md:px-8 selection:bg-blue-100">
             <div className="w-full text-center">
-                <h1 className="text-4xl font-extrabold text-slate-900 mb-8">
+                <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-4 sm:mb-8 px-2">
                     ฝึกเขียนภาษาจีน <span className="text-blue-600">Stroke Order</span>
                 </h1>
 
-                <div className="bg-white p-4 sm:p-8">
-                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                <div className="bg-white p-3 sm:p-4 md:p-8 rounded-xl shadow-sm">
+                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center mb-4 sm:mb-8">
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="พิมพ์คำศัพท์ (เช่น 你好)"
-                            className="text-center text-2xl sm:text-3xl w-full sm:w-64 h-14 sm:h-16 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-slate-800 font-bold"
+                            className="text-center text-xl sm:text-2xl md:text-3xl w-full sm:w-64 h-12 sm:h-14 md:h-16 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-slate-800 font-bold"
                         />
-                        <button type="submit" className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-md flex justify-center items-center gap-2 h-14 sm:h-16 text-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <button type="submit" className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-md flex justify-center items-center gap-2 h-12 sm:h-14 md:h-16 text-base sm:text-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                             ค้นหา
                         </button>
                     </form>
 
-                    <div className="mb-8 min-h-[250px]" ref={containerRef}></div>
+                    <div className="mb-4 sm:mb-8 min-h-[200px] sm:min-h-[250px]" ref={containerRef}></div>
 
-                    <div className="flex flex-wrap justify-center gap-4">
-                        <button onClick={handleAnimateAll} className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition-colors shadow-sm flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
-                            เล่นทั้งหมด (Animate All)
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
+                        <button onClick={handleAnimateAll} className="px-3 sm:px-6 py-2 sm:py-3 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition-colors shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+                            <span className="hidden sm:inline">เล่นทั้งหมด (Animate All)</span>
+                            <span className="sm:hidden">เล่น</span>
                         </button>
 
-                        <button onClick={handleQuizAll} className="px-6 py-3 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-colors shadow-sm flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                            ลองเขียนทั้งหมด (Quiz All)
+                        <button onClick={handleQuizAll} className="px-3 sm:px-6 py-2 sm:py-3 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-colors shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                            <span className="hidden sm:inline">ลองเขียนทั้งหมด (Quiz All)</span>
+                            <span className="sm:hidden">ฝึกเขียน</span>
                         </button>
                     </div>
 
-                    <p className="mt-6 text-slate-500 text-sm">
+                    <p className="mt-4 sm:mt-6 text-slate-500 text-xs sm:text-sm px-2">
                         * พิมพ์คำศัพท์ลงในช่องแล้วกดค้นหา เพื่อดูวิธีการเขียน<br />
                         ** กด "ลองเขียนทั้งหมด" เพื่อเริ่มฝึกเขียนทีละตัวจนครบ
                     </p>
@@ -368,45 +370,47 @@ export default function StrokeOrderPage() {
 
             {/* Quiz Modal */}
             {quizChar && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg relative animate-in fade-in zoom-in duration-200">
-                        <button onClick={closeQuizModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 w-full max-w-lg relative animate-in fade-in zoom-in duration-200 max-h-[95vh] overflow-y-auto">
+                        <button onClick={closeQuizModal} className="absolute top-2 right-2 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-600 p-1 sm:p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
 
-                        <h3 className="text-2xl font-bold text-slate-800 mb-6 text-center">
-                            ฝึกเขียน: <span className="text-blue-600 text-4xl ml-2">{quizChar}</span>
-                            {quizQueue.length > 0 && <span className="text-sm text-slate-400 ml-4 font-normal">({currentQuizIndex + 1}/{quizQueue.length})</span>}
+                        <h3 className="text-lg sm:text-2xl font-bold text-slate-800 mb-4 sm:mb-6 text-center pr-8">
+                            ฝึกเขียน: <span className="text-blue-600 text-2xl sm:text-4xl ml-1 sm:ml-2">{quizChar}</span>
+                            {quizQueue.length > 0 && <span className="text-xs sm:text-sm text-slate-400 ml-2 sm:ml-4 font-normal">({currentQuizIndex + 1}/{quizQueue.length})</span>}
                         </h3>
 
-                        <div className="flex justify-center mb-6">
+                        <div className="flex justify-center mb-4 sm:mb-6">
                             <div
                                 id="quiz-writer-target"
-                                className="border-4 border-dashed border-slate-200 rounded-xl bg-slate-50 transition-colors"
+                                className="border-4 border-dashed border-slate-200 rounded-xl bg-slate-50 transition-colors w-[250px] h-[250px] sm:w-[300px] sm:h-[300px]"
                             ></div>
                         </div>
 
-                        <p className="text-center text-slate-500 mb-4">
+                        <p className="text-center text-slate-500 mb-3 sm:mb-4 text-xs sm:text-sm px-2">
                             ลากเส้นตามลำดับขีด | คลิกกรอบเพื่อดูเฉลย
                         </p>
 
-                        <div className="flex justify-center gap-4">
-                            <button onClick={() => quizWriterRef.current?.quiz({ onCorrectStroke: playCorrectSound, onMistake: playMistakeSound, onComplete: playCompleteSound })} className="px-4 py-2 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-colors">
-                                เริ่มใหม่ (Retry)
+                        <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
+                            <button onClick={() => quizWriterRef.current?.quiz({ onCorrectStroke: playCorrectSound, onMistake: playMistakeSound, onComplete: playCompleteSound })} className="px-3 sm:px-4 py-2 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-colors text-sm sm:text-base">
+                                เริ่มใหม่
                             </button>
                             <button
                                 onClick={handleHintClick}
-                                className={`px-4 py-2 font-bold rounded-lg transition-colors flex items-center gap-2 ${unlockExpiry && Date.now() < unlockExpiry ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
+                                className={`px-3 sm:px-4 py-2 font-bold rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${unlockExpiry && Date.now() < unlockExpiry ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
                             >
                                 {unlockExpiry && Date.now() < unlockExpiry ? (
                                     <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                                        ดูเฉลยฟรี (30m)
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                        <span className="hidden sm:inline">ดูเฉลยฟรี (30m)</span>
+                                        <span className="sm:hidden">เฉลย</span>
                                     </>
                                 ) : (
                                     <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
-                                        ดูเฉลย (Ad)
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
+                                        <span className="hidden sm:inline">ดูเฉลย (Ad)</span>
+                                        <span className="sm:hidden">เฉลย</span>
                                     </>
                                 )}
                             </button>
@@ -417,17 +421,17 @@ export default function StrokeOrderPage() {
 
             {/* AdSense Modal (Interstitial) */}
             {showAd && (
-                <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center text-white p-4">
-                    <div className="bg-white text-black p-4 rounded-xl w-full max-w-lg shadow-2xl relative">
-                        <div className="text-center mb-4">
-                            <h3 className="text-xl font-bold text-slate-800">Advertisement</h3>
-                            <p className="text-slate-500 text-sm">Wait {adTimer}s to unlock hints</p>
+                <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center text-white p-2 sm:p-4">
+                    <div className="bg-white text-black p-3 sm:p-4 rounded-xl w-full max-w-lg shadow-2xl relative">
+                        <div className="text-center mb-3 sm:mb-4">
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-800">Advertisement</h3>
+                            <p className="text-slate-500 text-xs sm:text-sm">รอ {adTimer} วินาที</p>
                         </div>
 
                         {/* Adsense Placement */}
-                        <div className="flex justify-center items-center bg-slate-100 min-h-[250px] rounded-lg overflow-hidden mb-4 border border-slate-200">
+                        <div className="flex justify-center items-center bg-slate-100 min-h-[200px] sm:min-h-[250px] rounded-lg overflow-hidden mb-3 sm:mb-4 border border-slate-200">
                             <ins className="adsbygoogle"
-                                style={{ display: 'block', width: '300px', height: '250px' }}
+                                style={{ display: 'block', width: '100%', maxWidth: '300px', height: '250px' }}
                                 data-ad-client="ca-pub-6059901629514213"
                                 data-ad-slot="8235863029"
                                 data-ad-format="auto"
@@ -443,8 +447,8 @@ export default function StrokeOrderPage() {
                         </div>
 
                         {adTimer === 0 && (
-                            <p className="text-center text-green-600 font-bold animate-bounce">
-                                Unlocking...
+                            <p className="text-center text-green-600 font-bold animate-bounce text-sm sm:text-base">
+                                กำลังปลดล็อก...
                             </p>
                         )}
                     </div>
