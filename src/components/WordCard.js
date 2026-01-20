@@ -122,7 +122,7 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                         {word.thai}
                     </div>
                     <div className="text-[10px] text-gray-400 mt-1 leading-tight line-clamp-1">
-                        {word.meaning}
+                        {word.meaning} - {translatedEnglish ? ` ${translatedEnglish}` : ''}
                     </div>
                 </div>
 
@@ -169,6 +169,7 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                             <div className="text-center mt-2 text-gray-700">
                                 <p className="text-5xl font-bold mb-3">{word.char}</p>
                                 <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
+                                <p className="text-2xl text-gray-600">{word.meaning} - {translatedEnglish ? ` ${translatedEnglish}` : ''}</p>
                             </div>
                         </div>
                     </div>
