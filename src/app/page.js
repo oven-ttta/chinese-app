@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import WordCard from '@/components/WordCard';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { recordHanziVideo } from '@/utils/hanziRecorder';
 
 export default function Home() {
   const [words, setWords] = useState([]);
@@ -10,6 +13,11 @@ export default function Home() {
   const [activeId, setActiveId] = useState(null);
   const [selectedVowel, setSelectedVowel] = useState('all');
   const [selectedTone, setSelectedTone] = useState('all');
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
     async function fetchWords() {
@@ -36,6 +44,57 @@ export default function Home() {
 
   const handleStop = () => {
     setActiveId(null);
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAll = () => {
+    const allFilteredIds = filteredWords.map(w => w.id);
+    setSelectedIds(new Set(allFilteredIds));
+  };
+
+  const deselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  const handleDownloadZip = async () => {
+    if (selectedIds.size === 0) return;
+
+    setIsDownloading(true);
+    setDownloadProgress(0);
+    const zip = new JSZip();
+    const selectedWords = words.filter(w => selectedIds.has(w.id));
+
+    let completed = 0;
+    for (const word of selectedWords) {
+      try {
+        // We might want to limit parallel recordings to avoid crashing browser, 
+        // but for now, sequential is safest for video capture as it uses canvas.
+        const blob = await recordHanziVideo(word.char);
+        const fileName = `${word.char}_${word.pinyin}.webm`;
+        zip.file(fileName, blob);
+
+        completed++;
+        setDownloadProgress(Math.round((completed / selectedWords.length) * 100));
+      } catch (err) {
+        console.error(`Failed to record ${word.char}:`, err);
+      }
+    }
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, `chinese_words_video_${new Date().getTime()}.zip`);
+    setIsDownloading(false);
+    setDownloadProgress(0);
   };
 
   // Filter Logic
@@ -121,49 +180,81 @@ export default function Home() {
   }
 
   return (
-    <main className="flex-1 h-full bg-slate-50 py-4 sm:py-8 px-2 sm:px-4 md:px-8 selection:bg-blue-100">
+    <main className="flex-1 h-full bg-slate-50 py-4 sm:py-8 px-2 sm:px-4 md:px-8 selection:bg-blue-100 pb-24">
       <div className="w-full">
 
         {/* Filters */}
         <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl shadow-md border border-slate-100 flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-8 md:mb-10">
 
-          {/* Vowel Filter */}
-          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
-            <label htmlFor="vowel-select" className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
-              สระ (Vowel):
-            </label>
-            <select
-              id="vowel-select"
-              value={selectedVowel}
-              onChange={(e) => setSelectedVowel(e.target.value)}
-              className="block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
-            >
-              {vowels.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.label}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-wrap gap-4 w-full">
+            {/* Vowel Filter */}
+            <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+              <label htmlFor="vowel-select" className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
+                สระ (Vowel):
+              </label>
+              <select
+                id="vowel-select"
+                value={selectedVowel}
+                onChange={(e) => setSelectedVowel(e.target.value)}
+                className="block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
+              >
+                {vowels.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tone Filter */}
+            <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+              <label htmlFor="tone-select" className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
+                วรรณยุกต์ (Tone):
+              </label>
+              <select
+                id="tone-select"
+                value={selectedTone}
+                onChange={(e) => setSelectedTone(e.target.value)}
+                className="block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
+              >
+                {tones.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Selection Actions Bar */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-blue-800">เลือกแล้ว {selectedIds.size} คำ</span>
+            <button onClick={selectAll} className="text-xs text-blue-600 hover:underline font-medium">เลือกทั้งหมด</button>
+            <button onClick={deselectAll} className="text-xs text-red-600 hover:underline font-medium">ล้างการเลือก</button>
           </div>
 
-          {/* Tone Filter */}
-          <div className="w-full sm:w-auto flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
-            <label htmlFor="tone-select" className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap min-w-fit">
-              วรรณยุกต์ (Tone):
-            </label>
-            <select
-              id="tone-select"
-              value={selectedTone}
-              onChange={(e) => setSelectedTone(e.target.value)}
-              className="block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base text-slate-900 font-medium border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
-            >
-              {tones.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <button
+            onClick={handleDownloadZip}
+            disabled={selectedIds.size === 0 || isDownloading}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold shadow-lg transition-all
+                ${selectedIds.size === 0 || isDownloading
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:scale-105 active:scale-95'}`}
+          >
+            {isDownloading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                กำลังโหลด... {downloadProgress}%
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                ดาวน์โหลด Video (.ZIP)
+              </>
+            )}
+          </button>
         </div>
 
         {/* Word Grid */}
@@ -173,8 +264,10 @@ export default function Home() {
               key={word.id}
               word={word}
               isActive={activeId === word.id}
+              isSelected={selectedIds.has(word.id)}
               onPlay={() => handlePlay(word.id)}
               onStop={handleStop}
+              onSelect={() => toggleSelect(word.id)}
             />
           ))}
         </div>

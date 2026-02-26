@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { recordHanziVideo } from '@/utils/hanziRecorder';
+import { saveAs } from 'file-saver';
 
 // Global variable to track the currently playing proxy audio
 let currentProxyAudio = null;
 
 import HanziPlayer from './HanziPlayer';
 
-export default function WordCard({ word, isActive, onPlay, onStop }) {
+export default function WordCard({ word, isActive, isSelected, onPlay, onStop, onSelect }) {
     const [voice, setVoice] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
     const [translatedEnglish, setTranslatedEnglish] = useState('');
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Translate Thai to English
     useEffect(() => {
@@ -104,15 +107,39 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
         onPlay(word.id);
     };
 
+    const handleDownloadSingle = async () => {
+        setIsDownloading(true);
+        try {
+            const blob = await recordHanziVideo(word.char);
+            saveAs(blob, `${word.char}_${word.pinyin}.webm`);
+        } catch (err) {
+            console.error('Download error:', err);
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     return (
         <>
             <div
                 onClick={handleClick}
-                className="group relative bg-gradient-to-br from-white to-blue-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-blue-100 hover:border-blue-300 p-2 sm:p-3 h-28 sm:h-32 overflow-hidden flex items-center justify-between"
+                className={`group relative bg-linear-to-br from-white to-blue-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-blue-100'} hover:border-blue-300 p-2 sm:p-3 h-28 sm:h-32 overflow-hidden flex items-center justify-between`}
             >
+                {/* Selection Checkbox */}
+                {typeof onSelect === 'function' && (
+                    <div
+                        onClick={(e) => { e.stopPropagation(); onSelect(); }}
+                        className={`absolute top-2 right-2 w-5 h-5 rounded border flex items-center justify-center transition-colors z-10 ${isSelected ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`}
+                    >
+                        {isSelected && (
+                            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                        )}
+                    </div>
+                )}
+
                 {/* Left side - Text content */}
                 <div className="flex-1 flex flex-col justify-center min-w-0 pr-1 sm:pr-2">
-                    <div className="text-2xl sm:text-3xl font-bold text-gray-800 mb-0.5 font-sans transition-colors group-hover:text-blue-600 break-words leading-tight">
+                    <div className="text-2xl sm:text-3xl font-bold text-gray-800 mb-0.5 font-sans transition-colors group-hover:text-blue-600 wrap-break-word leading-tight">
                         {word.char}
                     </div>
                     <div className="text-xs sm:text-sm text-gray-600 font-medium leading-none" style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -126,9 +153,9 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                     </div>
                 </div>
 
-                {/* Right side - Hanzi Writer Preview (Vector SVG) */}
+                {/* Right side - Hanzi Writer Preview */}
                 <div
-                    className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity bg-white rounded border border-gray-200 overflow-hidden p-1"
+                    className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity bg-white rounded border border-gray-200 overflow-hidden p-1"
                     onClick={(e) => {
                         e.stopPropagation();
                         setShowImageModal(true);
@@ -162,15 +189,34 @@ export default function WordCard({ word, isActive, onPlay, onStop }) {
                         </button>
 
                         <div className="flex flex-col items-center w-full">
-                            {/* Interactive Hanzi Player (Multi-char Animation) */}
+                            {/* Interactive Hanzi Player */}
                             <HanziPlayer char={word.char} />
 
-                            {/* Image info - LARGER TEXT */}
+                            {/* Image info */}
                             <div className="text-center mt-2 text-gray-700">
                                 <p className="text-5xl font-bold mb-3">{word.char}</p>
                                 <p className="text-2xl text-gray-600">{word.pinyin} - {word.thai}</p>
                                 <p className="text-2xl text-gray-600">{word.meaning} - {translatedEnglish ? ` ${translatedEnglish}` : ''}</p>
                             </div>
+
+                            {/* Download Button in Modal */}
+                            <button
+                                onClick={handleDownloadSingle}
+                                disabled={isDownloading}
+                                className={`mt-6 flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-full font-bold shadow-lg hover:bg-green-700 transition-all hover:scale-105 ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {isDownloading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
+                                        กำลังสร้าง Video...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        ดาวน์โหลด Video ตัวอักษรนี้
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>

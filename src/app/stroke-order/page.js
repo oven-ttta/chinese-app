@@ -222,6 +222,50 @@ export default function StrokeOrderPage() {
     };
 
     // --- List Initialization ---
+    const [selectedChars, setSelectedChars] = useState(new Set());
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
+
+    const toggleSelectChar = (char) => {
+        setSelectedChars(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(char)) newSet.delete(char);
+            else newSet.add(char);
+            return newSet;
+        });
+    };
+
+    const handleDownloadZip = async () => {
+        if (selectedChars.size === 0) return;
+        setIsDownloading(true);
+        setDownloadProgress(0);
+
+        try {
+            const JSZip = (await import('jszip')).default;
+            const { saveAs } = await import('file-saver');
+            const { recordHanziVideo } = await import('@/utils/hanziRecorder');
+
+            const zip = new JSZip();
+            let completed = 0;
+            const charsArray = Array.from(selectedChars);
+
+            for (const char of charsArray) {
+                const blob = await recordHanziVideo(char);
+                zip.file(`${char}.webm`, blob);
+                completed++;
+                setDownloadProgress(Math.round((completed / charsArray.length) * 100));
+            }
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            saveAs(content, `hanzi_videos_${Date.now()}.zip`);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsDownloading(false);
+            setDownloadProgress(0);
+        }
+    };
+
     const initWriters = (chars) => {
         if (!containerRef.current || !window.HanziWriter) return;
 
@@ -235,8 +279,18 @@ export default function StrokeOrderPage() {
 
         charArray.forEach((char, index) => {
             const wrapper = document.createElement('div');
-            wrapper.className = "flex flex-col items-center gap-2";
+            wrapper.className = `flex flex-col items-center gap-2 p-2 rounded-xl transition-all border-2 ${selectedChars.has(char) ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-transparent'}`;
             grid.appendChild(wrapper);
+
+            // Checkbox for selection
+            const checkbox = document.createElement('div');
+            checkbox.className = `self-end w-5 h-5 rounded border mb-[-24px] z-10 cursor-pointer flex items-center justify-center transition-colors ${selectedChars.has(char) ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`;
+            checkbox.innerHTML = selectedChars.has(char) ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : '';
+            checkbox.onclick = (e) => {
+                e.stopPropagation();
+                toggleSelectChar(char);
+            };
+            wrapper.appendChild(checkbox);
 
             const div = document.createElement('div');
             div.id = `writer-${index}-${Date.now()}`;
@@ -275,8 +329,8 @@ export default function StrokeOrderPage() {
             controlsDiv.appendChild(quizBtn);
 
             const downloadBtn = document.createElement('button');
-            downloadBtn.className = "text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-300 font-bold transition-colors h-9";
-            downloadBtn.innerHTML = "GIF";
+            downloadBtn.className = "text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-300 font-bold transition-colors h-9 flex items-center gap-1";
+            downloadBtn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Video`;
             downloadBtn.onclick = () => handleDownloadSingle(char);
             controlsDiv.appendChild(downloadBtn);
         });
@@ -318,9 +372,15 @@ export default function StrokeOrderPage() {
         }
     };
 
-    const handleDownloadSingle = (charToDownload) => {
-        const charCode = charToDownload.charCodeAt(0).toString(16).toLowerCase();
-        window.open(`https://www.hanzi5.com/assets/bishun/animation/${charCode}.gif`, '_blank');
+    const handleDownloadSingle = async (charToDownload) => {
+        try {
+            const { recordHanziVideo } = await import('@/utils/hanziRecorder');
+            const { saveAs } = await import('file-saver');
+            const blob = await recordHanziVideo(charToDownload);
+            saveAs(blob, `${charToDownload}.webm`);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     return (
@@ -359,11 +419,30 @@ export default function StrokeOrderPage() {
                             <span className="hidden sm:inline">ลองเขียนทั้งหมด (Quiz All)</span>
                             <span className="sm:hidden">ฝึกเขียน</span>
                         </button>
+
+                        <button
+                            onClick={handleDownloadZip}
+                            disabled={selectedChars.size === 0 || isDownloading}
+                            className={`px-3 sm:px-6 py-2 sm:py-3 font-bold rounded-lg transition-all shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${selectedChars.size === 0 || isDownloading ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                        >
+                            {isDownloading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                                    {downloadProgress}%
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    <span className="hidden sm:inline">โหลดที่เลือก ({selectedChars.size})</span>
+                                    <span className="sm:hidden">ZIP ({selectedChars.size})</span>
+                                </>
+                            )}
+                        </button>
                     </div>
 
                     <p className="mt-4 sm:mt-6 text-slate-500 text-xs sm:text-sm px-2">
                         * พิมพ์คำศัพท์ลงในช่องแล้วกดค้นหา เพื่อดูวิธีการเขียน<br />
-                        ** กด "ลองเขียนทั้งหมด" เพื่อเริ่มฝึกเขียนทีละตัวจนครบ
+                        ** คลิกเลือกตัวอักษรที่ต้องการ แล้วกด &quot;โหลดที่เลือก&quot; เพื่อดาวน์โหลดเป็นไฟล์ ZIP
                     </p>
                 </div>
             </div>
