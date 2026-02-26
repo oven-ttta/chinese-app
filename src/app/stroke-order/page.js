@@ -250,7 +250,7 @@ export default function StrokeOrderPage() {
             const charsArray = Array.from(selectedChars);
 
             for (const char of charsArray) {
-                const blob = await recordHanziVideo(char);
+                const blob = await recordHanziVideo({ char });
                 zip.file(`${char}.webm`, blob);
                 completed++;
                 setDownloadProgress(Math.round((completed / charsArray.length) * 100));
@@ -376,7 +376,7 @@ export default function StrokeOrderPage() {
         try {
             const { recordHanziVideo } = await import('@/utils/hanziRecorder');
             const { saveAs } = await import('file-saver');
-            const blob = await recordHanziVideo(charToDownload);
+            const blob = await recordHanziVideo({ char: charToDownload });
             saveAs(blob, `${charToDownload}.webm`);
         } catch (err) {
             console.error(err);

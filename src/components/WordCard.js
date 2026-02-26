@@ -110,7 +110,7 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
     const handleDownloadSingle = async () => {
         setIsDownloading(true);
         try {
-            const blob = await recordHanziVideo(word.char);
+            const blob = await recordHanziVideo(word);
             saveAs(blob, `${word.char}_${word.pinyin}.webm`);
         } catch (err) {
             console.error('Download error:', err);
