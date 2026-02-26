@@ -14,6 +14,7 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
     const [showImageModal, setShowImageModal] = useState(false);
     const [translatedEnglish, setTranslatedEnglish] = useState('');
     const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
 
     // Translate Thai to English
     useEffect(() => {
@@ -109,13 +110,17 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
 
     const handleDownloadSingle = async () => {
         setIsDownloading(true);
+        setDownloadProgress(0);
         try {
-            const blob = await recordHanziVideo(word);
+            const blob = await recordHanziVideo(word, 720, 960, (internalProgress) => {
+                setDownloadProgress((internalProgress * 100).toFixed(1));
+            });
             saveAs(blob, `${word.char}_${word.pinyin}.webm`);
         } catch (err) {
             console.error('Download error:', err);
         } finally {
             setIsDownloading(false);
+            setDownloadProgress(0);
         }
     };
 
@@ -208,7 +213,7 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
                                 {isDownloading ? (
                                     <>
                                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
-                                        กำลังสร้าง Video...
+                                        กำลังสร้าง Video... {downloadProgress}%
                                     </>
                                 ) : (
                                     <>

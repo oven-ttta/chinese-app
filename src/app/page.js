@@ -80,12 +80,16 @@ export default function Home() {
       try {
         // We might want to limit parallel recordings to avoid crashing browser, 
         // but for now, sequential is safest for video capture as it uses canvas.
-        const blob = await recordHanziVideo(word);
+        const blob = await recordHanziVideo(word, 720, 960, (internalProgress) => {
+          const currentPercent = ((completed + internalProgress) / selectedWords.length) * 100;
+          setDownloadProgress(currentPercent.toFixed(1));
+        });
+
         const fileName = `${word.char}_${word.pinyin}.webm`;
         zip.file(fileName, blob);
 
         completed++;
-        setDownloadProgress(Math.round((completed / selectedWords.length) * 100));
+        setDownloadProgress(((completed / selectedWords.length) * 100).toFixed(1));
       } catch (err) {
         console.error(`Failed to record ${word.char}:`, err);
       }

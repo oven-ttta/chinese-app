@@ -109,10 +109,14 @@ export default function ContributorResults() {
         let completed = 0;
         for (const word of selectedWords) {
             try {
-                const blob = await recordHanziVideo(word);
+                const blob = await recordHanziVideo(word, 720, 960, (internalProgress) => {
+                    const currentPercent = ((completed + internalProgress) / selectedWords.length) * 100;
+                    setDownloadProgress(currentPercent.toFixed(1));
+                });
                 zip.file(`${word.char}_${word.pinyin}.webm`, blob);
+
                 completed++;
-                setDownloadProgress(Math.round((completed / selectedWords.length) * 100));
+                setDownloadProgress(((completed / selectedWords.length) * 100).toFixed(1));
             } catch (err) {
                 console.error(err);
             }

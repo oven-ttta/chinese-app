@@ -250,10 +250,14 @@ export default function StrokeOrderPage() {
             const charsArray = Array.from(selectedChars);
 
             for (const char of charsArray) {
-                const blob = await recordHanziVideo({ char });
+                const blob = await recordHanziVideo({ char }, 720, 960, (internalProgress) => {
+                    const currentPercent = ((completed + internalProgress) / charsArray.length) * 100;
+                    setDownloadProgress(currentPercent.toFixed(1));
+                });
                 zip.file(`${char}.webm`, blob);
+
                 completed++;
-                setDownloadProgress(Math.round((completed / charsArray.length) * 100));
+                setDownloadProgress(((completed / charsArray.length) * 100).toFixed(1));
             }
 
             const content = await zip.generateAsync({ type: 'blob' });

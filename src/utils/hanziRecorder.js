@@ -1,4 +1,4 @@
-export async function recordHanziVideo(wordObj, width = 720, height = 960) {
+export async function recordHanziVideo(wordObj, width = 720, height = 960, onProgress = null) {
     return new Promise(async (resolve, reject) => {
         const { char, pinyin, thai, meaning } = wordObj;
 
@@ -17,13 +17,12 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960) {
         const dest = audioCtx.createMediaStreamDestination();
 
         let audioBuffer = null;
-        try {
-            const audioRes = await fetch(`/api/tts?text=${encodeURIComponent(char)}&lang=zh-CN`);
-            const arrayBuffer = await audioRes.arrayBuffer();
-            audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        } catch (err) {
-            console.error("Audio recording failed:", err);
-        }
+        // Start fetching audio in the background IMMEDIATELY, but don't await till needed
+        const fetchAudioPromise = fetch(`/api/tts?text=${encodeURIComponent(char)}&lang=zh-CN`)
+            .then(res => res.arrayBuffer())
+            .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+            .then(buffer => { audioBuffer = buffer; })
+            .catch(err => { console.error("Audio recording failed:", err); });
 
         // 3. Setup Hidden Container in DOM (CRITICAL FOR REQUEST_ANIMATION_FRAME)
         // If not in DOM, browser throttles rAF to 0 or 1 FPS, causing stuttering!
@@ -63,12 +62,31 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960) {
             if (e.data.size > 0) chunks.push(e.data);
         };
 
+        // Setup Progress Reporting
+        let progressInterval = null;
+        const charLength = char.split('').filter(c => /[\u4E00-\u9FFF]/.test(c)).length || 1;
+        // Adjust estimated duration dynamically for the slower 1.5 speed:
+        // Initial wait (200ms) + Char loop(wait 200 + anim ~2500 + wait 400 = 3100ms) + buffer (1000ms)
+        const estimatedDuration = 200 + (charLength * 3100) + 1000;
+        const startTime = Date.now();
+
+        if (onProgress) {
+            progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                let p = elapsed / estimatedDuration;
+                if (p > 0.999) p = 0.999; // Cap at 99.9%
+                onProgress(p);
+            }, 50); // update every 50ms for smooth 0.1 increment
+        }
+
         // Cleanup function
         const cleanup = (blob) => {
             document.body.removeChild(recordingContainer);
             if (audioCtx.state !== 'closed') {
                 audioCtx.close();
             }
+            if (progressInterval) clearInterval(progressInterval);
+            if (onProgress) onProgress(1); // 100%
             if (blob) resolve(blob);
         };
 
@@ -121,15 +139,19 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960) {
             ctx.font = `normal ${width * 0.06}px Arial, sans-serif`;
             ctx.fillText(meaning || '', width / 2, textStartY + 170);
 
-            requestAnimationFrame(render);
+            // Use setTimeout to avoid requestAnimationFrame being throttled when tab is inactive/backgrounded
+            setTimeout(render, 1000 / 60);
         };
 
         recorder.start();
         render();
 
         try {
-            // Wait slightly before starting
-            await new Promise(r => setTimeout(r, 600));
+            // Wait slightly before starting (reduced)
+            await new Promise(r => setTimeout(r, 200));
+
+            // Ensure Audio is loaded before we start drawing
+            await fetchAudioPromise;
 
             // Start Audio
             if (audioBuffer) {
@@ -141,7 +163,7 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960) {
 
             const charsToAnimate = char.split('').filter(c => /[\u4E00-\u9FFF]/.test(c));
             if (charsToAnimate.length === 0) {
-                await new Promise(r => setTimeout(r, 2000));
+                await new Promise(r => setTimeout(r, 1000));
             } else {
                 for (const c of charsToAnimate) {
                     const writer = window.HanziWriter.create(writerCanvas, c, {
@@ -151,18 +173,18 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960) {
                         strokeColor: '#333333',
                         radicalColor: '#16a34a', // green-600
                         showOutline: true,
-                        strokeAnimationSpeed: 1.5,
-                        delayBetweenStrokes: 50,
+                        strokeAnimationSpeed: 1.5, // ลดความเร็วลงเพื่อให้มองเห็นวิธีเขียนชัดเจนขึ้น
+                        delayBetweenStrokes: 40, // เพิ่มช่องว่างให้การตวัดพู่กันดูเป็นธรรมชาติ
                         renderer: 'canvas'
                     });
 
-                    await new Promise(r => setTimeout(r, 300));
+                    await new Promise(r => setTimeout(r, 200)); // หน่วงนิดนึงก่อนเริ่มตัวแรก
                     await writer.animateCharacter();
-                    await new Promise(r => setTimeout(r, 300)); // Pause between characters
+                    await new Promise(r => setTimeout(r, 400)); // Pause ระหว่างตัว
                 }
             }
 
-            await new Promise(r => setTimeout(r, 1200)); // Final buffer
+            await new Promise(r => setTimeout(r, 1000)); // Final buffer
 
             animationRequested = false;
             recorder.stop();
