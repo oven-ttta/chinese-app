@@ -16,21 +16,36 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
 
-    // Translate Thai to English
+    // Translate Thai to English. The grid mounts hundreds of cards at once, so a
+    // single fetch can get dropped under the request burst — retry a few times
+    // with staggered backoff so the English meaning reliably shows up.
     useEffect(() => {
-        if (word.meaning) {
-            fetch(`/api/translate?text=${encodeURIComponent(word.meaning)}&from=th&to=en`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.translatedText) {
-                        setTranslatedEnglish(data.translatedText);
+        if (!word.meaning) return;
+        let cancelled = false;
+
+        const fetchTranslation = async () => {
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    const res = await fetch(`/api/translate?text=${encodeURIComponent(word.meaning)}&from=th&to=en`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    if (cancelled) return;
+                    if (data.translatedText) setTranslatedEnglish(data.translatedText);
+                    return;
+                } catch (err) {
+                    if (cancelled) return;
+                    if (attempt === 2) {
+                        console.error('Translation error:', err);
+                        return;
                     }
-                })
-                .catch(err => {
-                    console.error('Translation error:', err);
-                    setTranslatedEnglish('');
-                });
-        }
+                    // Staggered backoff to spread retries across the burst.
+                    await new Promise(r => setTimeout(r, 500 * (attempt + 1) + Math.random() * 500));
+                }
+            }
+        };
+
+        fetchTranslation();
+        return () => { cancelled = true; };
     }, [word.meaning]);
 
     useEffect(() => {
@@ -112,7 +127,7 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
         setIsDownloading(true);
         setDownloadProgress(0);
         try {
-            const blob = await recordHanziVideo(word, 720, 960, (internalProgress) => {
+            const blob = await recordHanziVideo({ ...word, english: translatedEnglish }, 720, 960, (internalProgress) => {
                 setDownloadProgress((internalProgress * 100).toFixed(1));
             });
             saveAs(blob, `${word.char}_${word.pinyin}.webm`);
@@ -147,7 +162,7 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
                     <div className="text-2xl sm:text-3xl font-bold text-gray-800 mb-0.5 font-sans transition-colors group-hover:text-blue-600 wrap-break-word leading-tight">
                         {word.char}
                     </div>
-                    <div className="text-xs sm:text-sm text-gray-600 font-medium leading-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    <div className="text-xs sm:text-sm text-gray-600 font-medium leading-none">
                         {word.pinyin}
                     </div>
                     <div className="text-[10px] sm:text-xs text-gray-700 font-medium truncate mt-1">

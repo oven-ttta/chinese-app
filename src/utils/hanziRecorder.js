@@ -1,6 +1,36 @@
+// Resolve the page's font stack (Sarabun for Thai/Latin + Noto Sans SC for the
+// Chinese glyph) so the video matches the UI. Falls back to a Sarabun stack.
+function getFontFamily() {
+    try {
+        const f = getComputedStyle(document.body).fontFamily;
+        if (f) return f;
+    } catch { /* not in a DOM context */ }
+    return 'Sarabun, Tahoma, sans-serif';
+}
+
+// Set ctx.font to the largest size that still fits `text` within `maxWidth`,
+// shrinking from basePx if needed. Returns the chosen pixel size.
+function fitFont(ctx, text, maxWidth, weight, basePx, family) {
+    let px = basePx;
+    ctx.font = `${weight} ${px}px ${family}`;
+    const w = ctx.measureText(text).width;
+    if (w > maxWidth && w > 0) {
+        px = Math.max(12, Math.floor(px * (maxWidth / w)));
+        ctx.font = `${weight} ${px}px ${family}`;
+    }
+    return px;
+}
+
 export async function recordHanziVideo(wordObj, width = 720, height = 960, onProgress = null) {
     return new Promise(async (resolve, reject) => {
         const { char, pinyin, thai, meaning } = wordObj;
+
+        const fontFamily = getFontFamily();
+        // Make sure the webfont (Sarabun) is actually loaded before we draw to
+        // the canvas, otherwise early frames render in a fallback font.
+        if (typeof document !== 'undefined' && document.fonts) {
+            try { await document.fonts.ready; } catch { /* ignore */ }
+        }
 
         // 1. Ensure HanziWriter is loaded
         if (!window.HanziWriter) {
@@ -24,6 +54,17 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
             .then(buffer => { audioBuffer = buffer; })
             .catch(err => { console.error("Audio recording failed:", err); });
 
+        // 2b. English translation. Use the value passed in (already fetched by the
+        // card UI) when available; otherwise fetch it ourselves so bulk downloads
+        // also get the English line. Falls back silently to Thai-only on failure.
+        let englishText = (wordObj.english || '').trim();
+        const fetchEnglishPromise = (!englishText && meaning)
+            ? fetch(`/api/translate?text=${encodeURIComponent(meaning)}&from=th&to=en`)
+                .then(res => res.json())
+                .then(data => { if (data.translatedText) englishText = data.translatedText.trim(); })
+                .catch(err => { console.error("Translation for video failed:", err); })
+            : Promise.resolve();
+
         // 3. Setup Hidden Container in DOM (CRITICAL FOR REQUEST_ANIMATION_FRAME)
         // If not in DOM, browser throttles rAF to 0 or 1 FPS, causing stuttering!
         const recordingContainer = document.createElement('div');
@@ -41,11 +82,27 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
 
         const ctx = canvas.getContext('2d');
 
+        // 3b. Layout geometry (portrait). Computed so all three text lines fit
+        // comfortably above the bottom edge — the previous layout pushed the
+        // meaning line to y=962 on a 960px canvas, clipping it off-screen.
+        const margin = width * 0.1;
+        const boxTop = height * 0.05;
+        const boxSize = width - (margin * 2);
+        const boxBottom = boxTop + boxSize;
+
         const writerSize = width * 0.7; // 70% of width
         const writerCanvas = document.createElement('canvas');
         writerCanvas.width = writerSize;
         writerCanvas.height = writerSize;
         recordingContainer.appendChild(writerCanvas);
+
+        // Baselines for the text block below the animation box.
+        const charBaseline = boxBottom + (height - boxBottom) * 0.42;
+        const pinyinBaseline = charBaseline + width * 0.11;
+        const meaningBaseline = pinyinBaseline + width * 0.09;
+
+        // Pre-compose the text lines (matches the card modal: "a - b").
+        const pinyinLine = [pinyin, thai].filter(Boolean).join(' - ');
 
         // 4. Mixing Stream
         const canvasStream = canvas.captureStream(60); // 60 FPS
@@ -64,7 +121,7 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
 
         // Setup Progress Reporting
         let progressInterval = null;
-        const charLength = char.split('').filter(c => /[\u4E00-\u9FFF]/.test(c)).length || 1;
+        const charLength = char.split('').filter(c => /[一-鿿]/.test(c)).length || 1;
         // Adjust estimated duration dynamically for the slower 1.5 speed:
         // Initial wait (200ms) + Char loop(wait 200 + anim ~2500 + wait 400 = 3100ms) + buffer (1000ms)
         const estimatedDuration = 200 + (charLength * 3100) + 1000;
@@ -104,40 +161,40 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
 
-            // 2. Grey Container Header Box
-            const margin = width * 0.1;
-            const topMargin = height * 0.1;
-            const boxSize = width - (margin * 2);
+            // 2. Grey Container Box (matches the website's stroke-order panel)
             ctx.fillStyle = '#f8fafc'; // slate-50
             ctx.beginPath();
-            ctx.roundRect(margin, topMargin, boxSize, boxSize, 25);
+            ctx.roundRect(margin, boxTop, boxSize, boxSize, 25);
             ctx.fill();
-
-            // Draw box border (dashed like the website)
             ctx.strokeStyle = '#e2e8f0'; // slate-200
             ctx.lineWidth = 4;
             ctx.stroke();
 
-            // 3. Draw HanziWriter in the box Center
-            ctx.drawImage(writerCanvas, margin + (boxSize - writerSize) / 2, topMargin + (boxSize - writerSize) / 2);
+            // 3. Draw HanziWriter animation in the box center
+            ctx.drawImage(writerCanvas, margin + (boxSize - writerSize) / 2, boxTop + (boxSize - writerSize) / 2);
 
-            // 4. BIG BOLD CHARACTER
-            const textStartY = topMargin + boxSize + 120;
-            ctx.fillStyle = '#1e293b'; // slate-800
-            ctx.font = `bold ${width * 0.18}px sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText(char, width / 2, textStartY);
 
-            // 5. PINYIN WITH THAI REPRESENTATION (e.g. wǒ - หว่อ)
-            ctx.fillStyle = '#334155'; // slate-700
-            ctx.font = `bold ${width * 0.08}px Arial, sans-serif`;
-            const pinyinText = `${pinyin || ''} - ${thai || ''}`;
-            ctx.fillText(pinyinText, width / 2, textStartY + 90);
+            // 4. BIG BOLD CHARACTER (Chinese)
+            ctx.fillStyle = '#1e293b'; // slate-800
+            fitFont(ctx, char, width - margin, 'bold', width * 0.18, fontFamily);
+            ctx.fillText(char, width / 2, charBaseline);
 
-            // 6. MEANING (e.g. ฉัน, ผม, ดิฉัน -)
-            ctx.fillStyle = '#64748b'; // slate-500
-            ctx.font = `normal ${width * 0.06}px Arial, sans-serif`;
-            ctx.fillText(meaning || '', width / 2, textStartY + 170);
+            // 5. PINYIN + THAI READING (e.g. "pà - พ่า")
+            if (pinyinLine) {
+                ctx.fillStyle = '#334155'; // slate-700
+                fitFont(ctx, pinyinLine, width - margin, 'bold', width * 0.075, fontFamily);
+                ctx.fillText(pinyinLine, width / 2, pinyinBaseline);
+            }
+
+            // 6. MEANING: THAI + ENGLISH (e.g. "กลัว - Fear")
+            // Built every frame so it picks up the translation once it resolves.
+            const meaningLine = [meaning, englishText].filter(Boolean).join(' - ');
+            if (meaningLine) {
+                ctx.fillStyle = '#64748b'; // slate-500
+                fitFont(ctx, meaningLine, width - margin * 0.6, 'normal', width * 0.058, fontFamily);
+                ctx.fillText(meaningLine, width / 2, meaningBaseline);
+            }
 
             // Use setTimeout to avoid requestAnimationFrame being throttled when tab is inactive/backgrounded
             setTimeout(render, 1000 / 60);
@@ -150,8 +207,9 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
             // Wait slightly before starting (reduced)
             await new Promise(r => setTimeout(r, 200));
 
-            // Ensure Audio is loaded before we start drawing
-            await fetchAudioPromise;
+            // Ensure audio + translation are ready before the stroke animation runs,
+            // so the animated portion of the video always shows the full text.
+            await Promise.all([fetchAudioPromise, fetchEnglishPromise]);
 
             // Start Audio
             if (audioBuffer) {
@@ -161,7 +219,7 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
                 source.start(0);
             }
 
-            const charsToAnimate = char.split('').filter(c => /[\u4E00-\u9FFF]/.test(c));
+            const charsToAnimate = char.split('').filter(c => /[一-鿿]/.test(c));
             if (charsToAnimate.length === 0) {
                 await new Promise(r => setTimeout(r, 1000));
             } else {

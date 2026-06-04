@@ -1,14 +1,16 @@
-import { Kanit, Noto_Sans_SC } from "next/font/google";
+import { Sarabun, Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { AlertProvider } from "@/providers/AlertProvider";
 
 import Script from "next/script";
 
-const kanit = Kanit({
-  variable: "--font-kanit",
+// TH Sarabun (Google Fonts "Sarabun" by Cadson Demak — the web edition of
+// TH Sarabun New). Goes up to ExtraBold (800); it has no 900 weight.
+const sarabun = Sarabun({
+  variable: "--font-sarabun",
   subsets: ["latin", "thai"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -50,8 +52,8 @@ export default function RootLayout({ children }) {
         </Script>
       </head>
       <body
-        className={`${kanit.variable} ${notoSansSC.variable} antialiased flex flex-col min-h-screen`}
-        style={{ fontFamily: 'var(--font-kanit), var(--font-noto-sans-sc), sans-serif' }}
+        className={`${sarabun.variable} ${notoSansSC.variable} antialiased flex flex-col min-h-screen`}
+        style={{ fontFamily: 'var(--font-sarabun), var(--font-noto-sans-sc), sans-serif' }}
       >
         <AlertProvider>
           <Navbar />
