@@ -80,7 +80,7 @@ export default function Home() {
       try {
         // We might want to limit parallel recordings to avoid crashing browser, 
         // but for now, sequential is safest for video capture as it uses canvas.
-        const blob = await recordHanziVideo(word, 720, 960, (internalProgress) => {
+        const blob = await recordHanziVideo(word, 1080, 1440, (internalProgress) => {
           const currentPercent = ((completed + internalProgress) / selectedWords.length) * 100;
           setDownloadProgress(currentPercent.toFixed(1));
         });

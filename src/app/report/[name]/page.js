@@ -109,7 +109,7 @@ export default function ContributorResults() {
         let completed = 0;
         for (const word of selectedWords) {
             try {
-                const blob = await recordHanziVideo(word, 720, 960, (internalProgress) => {
+                const blob = await recordHanziVideo(word, 1080, 1440, (internalProgress) => {
                     const currentPercent = ((completed + internalProgress) / selectedWords.length) * 100;
                     setDownloadProgress(currentPercent.toFixed(1));
                 });

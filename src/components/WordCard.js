@@ -127,7 +127,7 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
         setIsDownloading(true);
         setDownloadProgress(0);
         try {
-            const blob = await recordHanziVideo({ ...word, english: translatedEnglish }, 720, 960, (internalProgress) => {
+            const blob = await recordHanziVideo({ ...word, english: translatedEnglish }, 1080, 1440, (internalProgress) => {
                 setDownloadProgress((internalProgress * 100).toFixed(1));
             });
             saveAs(blob, `${word.char}_${word.pinyin}.webm`);

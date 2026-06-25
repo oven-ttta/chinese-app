@@ -250,7 +250,7 @@ export default function StrokeOrderPage() {
             const charsArray = Array.from(selectedChars);
 
             for (const char of charsArray) {
-                const blob = await recordHanziVideo({ char }, 720, 960, (internalProgress) => {
+                const blob = await recordHanziVideo({ char }, 1080, 1440, (internalProgress) => {
                     const currentPercent = ((completed + internalProgress) / charsArray.length) * 100;
                     setDownloadProgress(currentPercent.toFixed(1));
                 });

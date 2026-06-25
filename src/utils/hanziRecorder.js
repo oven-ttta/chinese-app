@@ -21,7 +21,28 @@ function fitFont(ctx, text, maxWidth, weight, basePx, family) {
     return px;
 }
 
-export async function recordHanziVideo(wordObj, width = 720, height = 960, onProgress = null) {
+// Pick the best webm codec the current browser can actually encode. VP9 gives
+// noticeably sharper output than VP8 at the same bitrate; we fall back step by
+// step so older browsers still record.
+function pickVideoMimeType() {
+    const candidates = [
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=vp8',
+        'video/webm',
+    ];
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported) {
+        for (const c of candidates) {
+            if (MediaRecorder.isTypeSupported(c)) return c;
+        }
+    }
+    return 'video/webm';
+}
+
+// Default to true Full-HD width (1080) in portrait 3:4. The layout below is all
+// relative to width/height, so it scales up cleanly with no repositioning.
+export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onProgress = null) {
     return new Promise(async (resolve, reject) => {
         const { char, pinyin, thai, meaning } = wordObj;
 
@@ -110,8 +131,13 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
         canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
         dest.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
 
+        // High bitrate so the 1080p output stays crisp (browser default is only
+        // ~2.5 Mbps, which looks blurry). Prefer VP9 for better quality/bitrate.
+        const mimeType = pickVideoMimeType();
         const recorder = new MediaRecorder(combinedStream, {
-            mimeType: 'video/webm'
+            mimeType,
+            videoBitsPerSecond: 12_000_000, // 12 Mbps — sharp 1080p
+            audioBitsPerSecond: 128_000,
         });
 
         const chunks = [];
@@ -138,6 +164,7 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
 
         // Cleanup function
         const cleanup = (blob) => {
+            if (rafId) cancelAnimationFrame(rafId);
             document.body.removeChild(recordingContainer);
             if (audioCtx.state !== 'closed') {
                 audioCtx.close();
@@ -148,12 +175,13 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
         };
 
         recorder.onstop = () => {
-            const blob = new Blob(chunks, { type: 'video/webm' });
+            const blob = new Blob(chunks, { type: mimeType });
             cleanup(blob);
         };
 
         // 5. Drawing Loop
         let animationRequested = true;
+        let rafId = null;
         const render = () => {
             if (!animationRequested) return;
 
@@ -196,8 +224,11 @@ export async function recordHanziVideo(wordObj, width = 720, height = 960, onPro
                 ctx.fillText(meaningLine, width / 2, meaningBaseline);
             }
 
-            // Use setTimeout to avoid requestAnimationFrame being throttled when tab is inactive/backgrounded
-            setTimeout(render, 1000 / 60);
+            // requestAnimationFrame is vsync-aligned, so the composited frames
+            // stay smooth (no drift/stutter that setTimeout(…, 16) introduces).
+            // captureStream(60) samples the canvas, so we just need to keep it
+            // freshly drawn every frame.
+            rafId = requestAnimationFrame(render);
         };
 
         recorder.start();
