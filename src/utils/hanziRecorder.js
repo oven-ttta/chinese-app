@@ -151,23 +151,25 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
             if (e.data.size > 0) chunks.push(e.data);
         };
 
-        // Setup Progress Reporting
+        // Setup Progress Reporting. Started later — only once every asset is loaded
+        // and recording actually begins — so the bar tracks the recording phase and
+        // not the (variable) preload wait.
         let progressInterval = null;
         const charLength = char.split('').filter(c => /[一-鿿]/.test(c)).length || 1;
-        // Estimated total time for the progress bar, tuned for the slower 1.0 stroke
-        // speed. Initial wait (200ms) + per char (wait 200 + anim ~3900 + wait 400
-        // ≈ 4500ms) + final buffer (1000ms).
-        const estimatedDuration = 200 + (charLength * 4500) + 1000;
-        const startTime = Date.now();
+        // Estimated recording time. Initial settle (100ms) + per char (wait 200 +
+        // anim ~3900 + wait 400 ≈ 4500ms) + final buffer (1000ms).
+        const estimatedDuration = 100 + (charLength * 4500) + 1000;
 
-        if (onProgress) {
+        const startProgress = () => {
+            if (!onProgress) return;
+            const startTime = Date.now();
             progressInterval = setInterval(() => {
                 const elapsed = Date.now() - startTime;
                 let p = elapsed / estimatedDuration;
                 if (p > 0.999) p = 0.999; // Cap at 99.9%
                 onProgress(p);
             }, 50); // update every 50ms for smooth 0.1 increment
-        }
+        };
 
         // Cleanup function
         const cleanup = (blob) => {
@@ -252,23 +254,38 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
 
             // requestAnimationFrame is vsync-aligned, so the composited frames
             // stay smooth (no drift/stutter that setTimeout(…, 16) introduces).
-            // captureStream(60) samples the canvas, so we just need to keep it
+            // captureStream(120) samples the canvas, so we just need to keep it
             // freshly drawn every frame.
             rafId = requestAnimationFrame(render);
         };
 
-        recorder.start();
-        render();
+        // ── Wait for EVERYTHING before recording, so the clip never freezes ──
+        // The HanziWriter script and the webfonts were already awaited above. Here
+        // we also PRELOAD each Chinese character's stroke data and feed it back to
+        // HanziWriter via charDataLoader, so it never pauses mid-clip to fetch data
+        // from the CDN (that fetch was the main cause of the frozen intro/stutter).
+        const charsToAnimate = char.split('').filter(c => /[一-鿿]/.test(c));
+        const charDataMap = {};
+        const preloadPromise = Promise.all(charsToAnimate.map(c =>
+            window.HanziWriter.loadCharacterData(c)
+                .then(data => { charDataMap[c] = data; })
+                .catch(() => { /* fall back to the network loader for this char */ })
+        ));
 
         try {
-            // Wait slightly before starting (reduced)
-            await new Promise(r => setTimeout(r, 200));
+            // Block until audio, English translation AND stroke data are all ready.
+            await Promise.all([fetchAudioPromise, fetchEnglishPromise, preloadPromise]);
 
-            // Ensure audio + translation are ready before the stroke animation runs,
-            // so the animated portion of the video always shows the full text.
-            await Promise.all([fetchAudioPromise, fetchEnglishPromise]);
+            // Everything is loaded — NOW start recording and the draw loop, so the
+            // very first recorded frame already shows the complete, ready card.
+            startProgress();
+            recorder.start();
+            render();
 
-            // Start Audio
+            // Capture one clean, fully-composed frame before anything moves.
+            await new Promise(r => setTimeout(r, 100));
+
+            // Start audio in sync with the stroke animation.
             if (audioBuffer) {
                 const source = audioCtx.createBufferSource();
                 source.buffer = audioBuffer;
@@ -276,12 +293,11 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
                 source.start(0);
             }
 
-            const charsToAnimate = char.split('').filter(c => /[一-鿿]/.test(c));
             if (charsToAnimate.length === 0) {
                 await new Promise(r => setTimeout(r, 1000));
             } else {
                 for (const c of charsToAnimate) {
-                    const writer = window.HanziWriter.create(writerCanvas, c, {
+                    const writerOptions = {
                         width: writerSize,
                         height: writerSize,
                         padding: writerSize / 15,
@@ -289,14 +305,18 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
                         radicalColor: '#16a34a', // green-600
                         showOutline: true,
                         // strokeAnimationSpeed is a multiplier of the default speed
-                        // (higher = faster). Lowered 1.5 → 1.0 so the Chinese strokes
-                        // are written noticeably slower and are easier to follow.
+                        // (higher = faster). 1.0 writes the strokes at a calm,
+                        // easy-to-follow pace.
                         strokeAnimationSpeed: 1.0,
                         delayBetweenStrokes: 80, // ช่องว่างระหว่างขีดมากขึ้น เห็นแต่ละขีดชัดเจน
-                        renderer: 'canvas'
-                    });
+                        renderer: 'canvas',
+                    };
+                    // Use the preloaded stroke data (no network fetch → no freeze).
+                    if (charDataMap[c]) writerOptions.charDataLoader = () => charDataMap[c];
 
-                    await new Promise(r => setTimeout(r, 200)); // หน่วงนิดนึงก่อนเริ่มตัวแรก
+                    const writer = window.HanziWriter.create(writerCanvas, c, writerOptions);
+
+                    await new Promise(r => setTimeout(r, 200)); // หน่วงนิดนึงก่อนเริ่มเขียน
                     await writer.animateCharacter();
                     await new Promise(r => setTimeout(r, 400)); // Pause ระหว่างตัว
                 }
@@ -309,8 +329,14 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
         } catch (err) {
             console.error("Recording error:", err);
             animationRequested = false;
-            recorder.stop();
-            reject(err);
+            if (recorder.state !== 'inactive') {
+                // Recording had already started — stop it; onstop resolves the clip.
+                recorder.stop();
+            } else {
+                // Failed before recording began — tear down and reject cleanly.
+                cleanup(null);
+                reject(err);
+            }
         }
     });
 }
