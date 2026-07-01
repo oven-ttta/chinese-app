@@ -126,17 +126,23 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
         const pinyinLine = [pinyin, thai].filter(Boolean).join(' - ');
 
         // 4. Mixing Stream
-        const canvasStream = canvas.captureStream(60); // 60 FPS
+        // Capture at 120 FPS for ultra-smooth playback (double the old 60). The
+        // recording container is kept in the DOM (see above) so requestAnimationFrame
+        // is never throttled and the stream doesn't drop frames / stutter. On a
+        // 120Hz display the strokes animate at a true 120fps; on 60Hz the file is
+        // still tagged 120fps so playback stays judder-free.
+        const canvasStream = canvas.captureStream(120); // 120 FPS
         const combinedStream = new MediaStream();
         canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
         dest.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
 
         // High bitrate so the 1080p output stays crisp (browser default is only
-        // ~2.5 Mbps, which looks blurry). Prefer VP9 for better quality/bitrate.
+        // ~2.5 Mbps, which looks blurry). Doubled 12→24 Mbps to preserve per-frame
+        // sharpness now that we capture at 120 FPS. Prefer VP9 for quality/bitrate.
         const mimeType = pickVideoMimeType();
         const recorder = new MediaRecorder(combinedStream, {
             mimeType,
-            videoBitsPerSecond: 12_000_000, // 12 Mbps — sharp 1080p
+            videoBitsPerSecond: 24_000_000, // 24 Mbps — sharp 1080p @ 120fps
             audioBitsPerSecond: 128_000,
         });
 
@@ -148,9 +154,10 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
         // Setup Progress Reporting
         let progressInterval = null;
         const charLength = char.split('').filter(c => /[一-鿿]/.test(c)).length || 1;
-        // Adjust estimated duration dynamically for the slower 1.5 speed:
-        // Initial wait (200ms) + Char loop(wait 200 + anim ~2500 + wait 400 = 3100ms) + buffer (1000ms)
-        const estimatedDuration = 200 + (charLength * 3100) + 1000;
+        // Estimated total time for the progress bar, tuned for the slower 1.0 stroke
+        // speed. Initial wait (200ms) + per char (wait 200 + anim ~3900 + wait 400
+        // ≈ 4500ms) + final buffer (1000ms).
+        const estimatedDuration = 200 + (charLength * 4500) + 1000;
         const startTime = Date.now();
 
         if (onProgress) {
@@ -224,6 +231,20 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
                 ctx.fillText(meaningLine, width / 2, meaningBaseline);
             }
 
+            // 7. Decorative frame border around the whole video (app blue → sky
+            // gradient) so the downloaded clip looks framed and finished. Drawn
+            // last, well outside the content, so it never overlaps text/animation.
+            const borderInset = width * 0.02;
+            const borderRadius = width * 0.055;
+            const borderGrad = ctx.createLinearGradient(0, 0, width, height);
+            borderGrad.addColorStop(0, '#2563eb'); // blue-600
+            borderGrad.addColorStop(1, '#38bdf8'); // sky-400
+            ctx.strokeStyle = borderGrad;
+            ctx.lineWidth = width * 0.012;
+            ctx.beginPath();
+            ctx.roundRect(borderInset, borderInset, width - borderInset * 2, height - borderInset * 2, borderRadius);
+            ctx.stroke();
+
             // requestAnimationFrame is vsync-aligned, so the composited frames
             // stay smooth (no drift/stutter that setTimeout(…, 16) introduces).
             // captureStream(60) samples the canvas, so we just need to keep it
@@ -262,8 +283,11 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
                         strokeColor: '#333333',
                         radicalColor: '#16a34a', // green-600
                         showOutline: true,
-                        strokeAnimationSpeed: 1.5, // ลดความเร็วลงเพื่อให้มองเห็นวิธีเขียนชัดเจนขึ้น
-                        delayBetweenStrokes: 40, // เพิ่มช่องว่างให้การตวัดพู่กันดูเป็นธรรมชาติ
+                        // strokeAnimationSpeed is a multiplier of the default speed
+                        // (higher = faster). Lowered 1.5 → 1.0 so the Chinese strokes
+                        // are written noticeably slower and are easier to follow.
+                        strokeAnimationSpeed: 1.0,
+                        delayBetweenStrokes: 80, // ช่องว่างระหว่างขีดมากขึ้น เห็นแต่ละขีดชัดเจน
                         renderer: 'canvas'
                     });
 
