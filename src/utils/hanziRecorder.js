@@ -192,9 +192,19 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
         const render = () => {
             if (!animationRequested) return;
 
-            // 1. Solid White Background
+            // Frame geometry (shared by the white fill and the black border below).
+            const borderInset = width * 0.02;
+            const borderRadius = width * 0.055;
+
+            // 1. No background outside the frame — clear the whole canvas to
+            // transparent, then fill white ONLY inside the frame so the content
+            // (text/animation) still reads. Where the webm can't keep alpha the
+            // outside falls back to black; either way there's no white margin.
+            ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.roundRect(borderInset, borderInset, width - borderInset * 2, height - borderInset * 2, borderRadius);
+            ctx.fill();
 
             // 2. Grey Container Box (matches the website's stroke-order panel)
             ctx.fillStyle = '#f8fafc'; // slate-50
@@ -231,15 +241,10 @@ export async function recordHanziVideo(wordObj, width = 1080, height = 1440, onP
                 ctx.fillText(meaningLine, width / 2, meaningBaseline);
             }
 
-            // 7. Decorative frame border around the whole video (app blue → sky
-            // gradient) so the downloaded clip looks framed and finished. Drawn
-            // last, well outside the content, so it never overlaps text/animation.
-            const borderInset = width * 0.02;
-            const borderRadius = width * 0.055;
-            const borderGrad = ctx.createLinearGradient(0, 0, width, height);
-            borderGrad.addColorStop(0, '#2563eb'); // blue-600
-            borderGrad.addColorStop(1, '#38bdf8'); // sky-400
-            ctx.strokeStyle = borderGrad;
+            // 7. Solid black frame border, drawn last on the edge of the white
+            // fill: half sits over white, half over the transparent margin, so
+            // the content ends up cleanly inside a black frame.
+            ctx.strokeStyle = '#000000';
             ctx.lineWidth = width * 0.012;
             ctx.beginPath();
             ctx.roundRect(borderInset, borderInset, width - borderInset * 2, height - borderInset * 2, borderRadius);
