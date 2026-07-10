@@ -147,7 +147,7 @@ export default function SentenceBreakdown() {
 
   const downloadDocx = async () => {
     try {
-      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, VerticalAlign } = await import("docx");
+      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, VerticalAlign, TableLayoutType } = await import("docx");
 
       const noBorders = {
         top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
@@ -250,11 +250,16 @@ export default function SentenceBreakdown() {
 
           const table = new Table({
             rows: rows,
+            layout: TableLayoutType.FIXED,
+            width: {
+              size: 100,
+              type: WidthType.PERCENTAGE,
+            },
             margins: {
               top: 0,
               bottom: 0,
-              left: 200,
-              right: 200,
+              left: 50,
+              right: 50,
             }
           });
 
