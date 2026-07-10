@@ -146,41 +146,140 @@ export default function SentenceBreakdown() {
   };
 
   const downloadDocx = async () => {
-    if (!previewRef.current) return;
     try {
-      const { Document, Packer, Paragraph, ImageRun } = await import("docx");
-      const canvas = await html2canvas(previewRef.current, { backgroundColor: "#ffffff", scale: 2 });
-      
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-      const arrayBuffer = await blob.arrayBuffer();
-      
-      const maxWidth = 600;
-      let width = canvas.width;
-      let height = canvas.height;
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width);
-        width = maxWidth;
-      }
+      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, VerticalAlign } = await import("docx");
 
-      const doc = new Document({
-        sections: [
-          {
-            properties: {},
+      const noBorders = {
+        top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+        bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+        left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+        right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      };
+
+      const children = [];
+
+      items.forEach(item => {
+        // 1. Index Paragraph
+        children.push(
+          new Paragraph({
             children: [
-              new Paragraph({
-                children: [
-                  new ImageRun({
-                    data: arrayBuffer,
-                    transformation: {
-                      width: width,
-                      height: height,
-                    },
-                  }),
-                ],
+              new TextRun({
+                text: item.sentence.index || "",
+                bold: true,
+                size: 32, // 16pt
               }),
             ],
-          },
-        ],
+            spacing: { before: 400, after: 100 },
+          })
+        );
+
+        // 2. Table for Word Blocks
+        if (item.blocks.length > 0) {
+          const rows = [];
+          
+          const hasTopNote = item.blocks.some(b => b.topNote);
+          const hasTopArrow = item.blocks.some(b => b.showTopArrow);
+
+          if (hasTopNote) {
+            rows.push(
+              new TableRow({
+                children: item.blocks.map(b => new TableCell({
+                  children: [new Paragraph({ children: [new TextRun({ text: b.topNote || "", size: 24 })], alignment: AlignmentType.CENTER })],
+                  borders: noBorders,
+                  verticalAlign: VerticalAlign.BOTTOM,
+                })),
+              })
+            );
+          }
+
+          if (hasTopArrow) {
+            rows.push(
+              new TableRow({
+                children: item.blocks.map(b => new TableCell({
+                  children: [new Paragraph({ children: [new TextRun({ text: b.showTopArrow ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })],
+                  borders: noBorders,
+                  verticalAlign: VerticalAlign.BOTTOM,
+                })),
+              })
+            );
+          }
+
+          // Thai Row
+          rows.push(
+            new TableRow({
+              children: item.blocks.map(b => new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: b.thai || "", size: 24 })], alignment: AlignmentType.CENTER })],
+                borders: noBorders,
+                verticalAlign: VerticalAlign.BOTTOM,
+              })),
+            })
+          );
+
+          // Hanzi Row
+          rows.push(
+            new TableRow({
+              children: item.blocks.map(b => new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: b.hanzi || "", size: 36, bold: true })], alignment: AlignmentType.CENTER })],
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
+              })),
+            })
+          );
+
+          // Bottom Arrow Row
+          rows.push(
+            new TableRow({
+              children: item.blocks.map(b => new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: b.pinyin ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })],
+                borders: noBorders,
+                verticalAlign: VerticalAlign.TOP,
+              })),
+            })
+          );
+
+          // Pinyin Row
+          rows.push(
+            new TableRow({
+              children: item.blocks.map(b => new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: b.pinyin || "", size: 24 })], alignment: AlignmentType.CENTER })],
+                borders: noBorders,
+                verticalAlign: VerticalAlign.TOP,
+              })),
+            })
+          );
+
+          const table = new Table({
+            rows: rows,
+            width: {
+              size: 100,
+              type: WidthType.AUTO,
+            },
+            margins: {
+              top: 0,
+              bottom: 0,
+              left: 100,
+              right: 100,
+            }
+          });
+
+          children.push(table);
+        }
+
+        // 3. Sentence Translations
+        if (item.sentence.hanzi) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.hanzi, size: 28 })], spacing: { before: 200 } }));
+        if (item.sentence.pinyin) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.pinyin, size: 28 })] }));
+        if (item.sentence.english) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.english, size: 28 })] }));
+        if (item.sentence.thai) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.thai, size: 28 })], spacing: { before: 100 } }));
+        
+        // Add spacer
+        children.push(new Paragraph({ text: "" }));
+      });
+
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: children,
+        }],
       });
 
       const buffer = await Packer.toBlob(doc);
