@@ -250,15 +250,11 @@ export default function SentenceBreakdown() {
 
           const table = new Table({
             rows: rows,
-            width: {
-              size: 100,
-              type: WidthType.AUTO,
-            },
             margins: {
               top: 0,
               bottom: 0,
-              left: 100,
-              right: 100,
+              left: 200,
+              right: 200,
             }
           });
 
