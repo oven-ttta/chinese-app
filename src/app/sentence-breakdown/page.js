@@ -61,6 +61,45 @@ export default function SentenceBreakdown() {
     }
   };
 
+  const [quickInput, setQuickInput] = useState("");
+
+  const handleQuickGenerate = () => {
+    const lines = quickInput.split('\n').map(line => line.trim()).filter(Boolean);
+    if (lines.length === 0) return;
+
+    const newHanzi = lines[0] || "";
+    const newPinyin = lines[1] || "";
+    const newThai = lines[2] || "";
+    const newEnglish = lines[3] || "";
+
+    setSentence(prev => ({
+      ...prev,
+      hanzi: newHanzi,
+      pinyin: newPinyin,
+      thai: newThai,
+      english: newEnglish
+    }));
+
+    const hanziChars = Array.from(newHanzi).filter(char => !/[。，？！,.?!]/.test(char));
+    const pinyinWords = newPinyin.split(/\s+/).map(p => p.replace(/[。，？！,.?!]/g, '')).filter(Boolean);
+    
+    // If Thai is separated by spaces, try to map it
+    const thaiWords = newThai.includes(' ') ? newThai.split(/\s+/).filter(Boolean) : [];
+
+    const newBlocks = hanziChars.map((char, index) => ({
+      id: Date.now() + index,
+      hanzi: char,
+      pinyin: pinyinWords[index] || "",
+      thai: thaiWords[index] || "",
+      topNote: "",
+      showTopArrow: false
+    }));
+
+    if (newBlocks.length > 0) {
+      setBlocks(newBlocks);
+    }
+  };
+
   return (
     <main className="flex-1 min-h-screen bg-slate-50 py-8 px-4 md:px-8">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -68,6 +107,30 @@ export default function SentenceBreakdown() {
         {/* Left Column: Editor */}
         <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100 flex flex-col gap-6">
           <h1 className="text-2xl font-bold text-slate-800">เครื่องมือสร้างโครงสร้างประโยค</h1>
+          
+          {/* Quick Input Section */}
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl space-y-3">
+            <h2 className="text-sm font-bold text-blue-800">⚡ สร้างอัตโนมัติจากข้อความ (Auto Generate)</h2>
+            <p className="text-xs text-blue-600">
+              วางข้อความเรียงตามบรรทัด:<br/>
+              บรรทัด 1: ภาษาจีน<br/>
+              บรรทัด 2: พินอิน (เว้นวรรคแต่ละคำ)<br/>
+              บรรทัด 3: ภาษาไทย (เว้นวรรคแต่ละคำถ้าต้องการให้แยกช่องอัตโนมัติ)<br/>
+              บรรทัด 4: ภาษาอังกฤษ (ไม่บังคับ)
+            </p>
+            <textarea
+              value={quickInput}
+              onChange={(e) => setQuickInput(e.target.value)}
+              placeholder="我爱你。&#10;wǒ ài nǐ.&#10;ฉัน รัก คุณ&#10;I love you."
+              className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px] text-sm"
+            />
+            <button
+              onClick={handleQuickGenerate}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm shadow-sm"
+            >
+              แยกลงช่องอัตโนมัติ
+            </button>
+          </div>
           
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-slate-700">1. ข้อมูลประโยค (Sentence Info)</h2>
