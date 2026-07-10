@@ -7,6 +7,14 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { useAlert } from '@/providers/AlertProvider';
 
+const PlusIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+);
+
+const BackIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+);
+
 export default function AddWord() {
     const router = useRouter();
     const { addAlert } = useAlert();
@@ -36,15 +44,11 @@ export default function AddWord() {
         try {
             const response = await fetch('/api/add', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to add word');
-            }
+            if (!response.ok) throw new Error('Failed to add word');
 
             addAlert('เพิ่มคำศัพท์เรียบร้อยแล้ว (Added successfully)', 'success');
             router.push('/');
@@ -57,150 +61,123 @@ export default function AddWord() {
         }
     };
 
+    const InputField = ({ label, name, value, onChange, placeholder, required = false, type = "text", as = "input", children }) => (
+        <div>
+            <label htmlFor={name} className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                {label}
+            </label>
+            {as === "input" ? (
+              <input
+                  type={type}
+                  name={name}
+                  id={name}
+                  required={required}
+                  value={value}
+                  onChange={onChange}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all text-slate-800 outline-none placeholder:text-slate-400 font-medium"
+                  placeholder={placeholder}
+              />
+            ) : as === "textarea" ? (
+              <textarea
+                  name={name}
+                  id={name}
+                  required={required}
+                  rows="2"
+                  value={value}
+                  onChange={onChange}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all text-slate-800 outline-none placeholder:text-slate-400 font-medium resize-y"
+                  placeholder={placeholder}
+              />
+            ) : as === "select" ? (
+              <select
+                  name={name}
+                  id={name}
+                  required={required}
+                  value={value}
+                  onChange={onChange}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all text-slate-800 outline-none font-medium cursor-pointer"
+              >
+                  {children}
+              </select>
+            ) : null}
+        </div>
+    );
+
     return (
-        <main className="flex-1 h-full bg-slate-50 py-4 sm:py-8 px-2 sm:px-4 md:px-8">
-            <div className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-3 sm:p-4 md:p-8">
-                <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-                    <h1 className="text-xl sm:text-3xl font-bold text-gray-900">เพิ่มคำศัพท์ใหม่</h1>
-                    <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base">
-                        &larr; กลับหน้าหลัก
+        <main className="flex-1 min-h-screen bg-slate-100 py-6 sm:py-10 px-4 sm:px-8">
+            <div className="max-w-3xl mx-auto">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 text-white">
+                            <PlusIcon />
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">เพิ่มคำศัพท์ใหม่</h1>
+                    </div>
+                    <Link href="/" className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 font-semibold text-sm transition-colors bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200">
+                        <BackIcon /> กลับหน้าหลัก
                     </Link>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                    <div>
-                        <label htmlFor="char" className="block text-xs sm:text-sm font-medium text-gray-700">
-                            ตัวอักษรจีน (Chinese Character)
-                        </label>
-                        <input
-                            type="text"
-                            name="char"
-                            id="char"
-                            required
-                            value={formData.char}
-                            onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
-                            placeholder="เช่น 饭"
-                        />
-                    </div>
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 sm:p-8">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        
+                        <InputField label="ตัวอักษรจีน (Chinese Character)" name="char" value={formData.char} onChange={handleChange} placeholder="เช่น 饭" required />
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="pinyin" className="block text-xs sm:text-sm font-medium text-gray-700">
-                                พินอิน (Pinyin)
-                            </label>
-                            <input
-                                type="text"
-                                name="pinyin"
-                                id="pinyin"
-                                required
-                                value={formData.pinyin}
-                                onChange={handleChange}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
-                                placeholder="เช่น fàn"
-                            />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <InputField label="พินอิน (Pinyin)" name="pinyin" value={formData.pinyin} onChange={handleChange} placeholder="เช่น fàn" required />
+                            <InputField label="อ่านว่า (Thai Reading)" name="thai" value={formData.thai} onChange={handleChange} placeholder="เช่น ฟ่าน" required />
                         </div>
 
-                        <div>
-                            <label htmlFor="thai" className="block text-xs sm:text-sm font-medium text-gray-700">
-                                อ่านว่า (Thai Reading)
-                            </label>
-                            <input
-                                type="text"
-                                name="thai"
-                                id="thai"
-                                required
-                                value={formData.thai}
-                                onChange={handleChange}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
-                                placeholder="เช่น ฟ่าน"
-                            />
-                        </div>
-                    </div>
+                        <InputField label="วรรณยุกต์ (Tone)" name="tone" value={formData.tone} onChange={handleChange} placeholder="เช่น เสียง 4" />
 
-                    <div>
-                        <label htmlFor="tone" className="block text-xs sm:text-sm font-medium text-gray-700">
-                            วรรณยุกต์ (Tone)
-                        </label>
-                        <input
-                            type="text"
-                            name="tone"
-                            id="tone"
-                            value={formData.tone}
-                            onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
-                            placeholder="เช่น เสียง 4"
-                        />
-                    </div>
+                        <InputField as="textarea" label="ความหมาย (Meaning)" name="meaning" value={formData.meaning} onChange={handleChange} placeholder="เช่น ข้าว, อาหาร" required />
 
-                    <div>
-                        <label htmlFor="meaning" className="block text-xs sm:text-sm font-medium text-gray-700">
-                            ความหมาย (Meaning)
-                        </label>
-                        <textarea
-                            name="meaning"
-                            id="meaning"
-                            required
-                            rows="2"
-                            value={formData.meaning}
-                            onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
-                            placeholder="เช่น ข้าว, อาหาร"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="contributor" className="block text-xs sm:text-sm font-medium text-gray-700">
-                                ผู้บันทึก (Contributor)
-                            </label>
-                            <select
-                                name="contributor"
-                                id="contributor"
-                                required
-                                value={formData.contributor}
-                                onChange={handleChange}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base sm:text-lg p-2 border text-gray-900"
-                            >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <InputField as="select" label="ผู้บันทึก (Contributor)" name="contributor" value={formData.contributor} onChange={handleChange} required>
                                 <option value="">เลือกผู้บันทึก</option>
                                 <option value="โอ">โอ</option>
                                 <option value="เอย">เอย</option>
                                 <option value="โจ">โจ</option>
                                 <option value="แบม">แบม</option>
                                 <option value="เบล">เบล</option>
-                            </select>
+                            </InputField>
+
+                            <div>
+                                <label htmlFor="date" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                                    วันที่บันทึก (Date)
+                                </label>
+                                <DatePicker
+                                    selected={formData.date ? new Date(formData.date) : null}
+                                    onChange={(date) => {
+                                        const formattedDate = date ? date.toISOString().split('T')[0] : '';
+                                        setFormData(prev => ({ ...prev, date: formattedDate }));
+                                    }}
+                                    dateFormat="yyyy-MM-dd"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all text-slate-800 outline-none placeholder:text-slate-400 font-medium"
+                                    placeholderText="เลือกวันที่"
+                                    isClearable
+                                    required
+                                />
+                            </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="date" className="block text-xs sm:text-sm font-medium text-gray-700">
-                                วันที่บันทึก (Date)
-                            </label>
-                            <DatePicker
-                                selected={formData.date ? new Date(formData.date) : null}
-                                onChange={(date) => {
-                                    const formattedDate = date ? date.toISOString().split('T')[0] : '';
-                                    setFormData(prev => ({ ...prev, date: formattedDate }));
-                                }}
-                                dateFormat="yyyy-MM-dd"
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base sm:text-lg p-2 border placeholder:text-gray-500 text-gray-900"
-                                placeholderText="เลือกวันที่"
-                                isClearable
-                                required
-                            />
+                        <div className="pt-6 mt-6 border-t border-slate-100">
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className={`w-full flex justify-center py-4 px-4 rounded-xl shadow-md text-base font-bold text-white transition-all active:scale-[0.98] ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200 hover:shadow-indigo-300'}`}
+                            >
+                                {isSubmitting ? (
+                                    <span className="flex items-center gap-2">
+                                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
+                                      กำลังบันทึก...
+                                    </span>
+                                ) : 'บันทึกคำศัพท์'}
+                            </button>
                         </div>
-                    </div>
-
-                    <div className="pt-2 sm:pt-4">
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className={`w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
-                        </button>
-                    </div>
-                </form>
-            </div >
-        </main >
+                    </form>
+                </div>
+            </div>
+        </main>
     );
 }

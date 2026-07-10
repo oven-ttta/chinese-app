@@ -2,6 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+const BackIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+);
+const SearchIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+);
+const PenIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+);
+
 export default function StrokeOrderPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [displayChars, setDisplayChars] = useState('');
@@ -9,7 +19,6 @@ export default function StrokeOrderPage() {
     const writersRef = useRef([]);
     const containerRef = useRef(null);
 
-    // Initial Load of HanziWriter
     useEffect(() => {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js';
@@ -18,34 +27,28 @@ export default function StrokeOrderPage() {
         return () => { };
     }, []);
 
-    // Re-init writers when chars change
     useEffect(() => {
         if (window.HanziWriter && displayChars) {
             initWriters(displayChars);
         }
     }, [displayChars, searchTrigger]);
 
-    // --- Quiz State ---
     const [quizChar, setQuizChar] = useState(null);
     const [quizQueue, setQuizQueue] = useState([]);
     const [currentQuizIndex, setCurrentQuizIndex] = useState(-1);
     const quizWriterRef = useRef(null);
     const audioContextRef = useRef(null);
 
-    // --- Ad & Unlock State ---
     const [showAd, setShowAd] = useState(false);
     const [adTimer, setAdTimer] = useState(5);
-    const [unlockExpiry, setUnlockExpiry] = useState(null); // Global expiry timestamp for ALL chars
+    const [unlockExpiry, setUnlockExpiry] = useState(null);
 
-    // --- Audio System ---
     useEffect(() => {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
             audioContextRef.current = new AudioContext();
         }
-        return () => {
-            audioContextRef.current?.close();
-        };
+        return () => audioContextRef.current?.close();
     }, []);
 
     const playTone = (type, freqStart, freqEnd, duration, volume = 0.1) => {
@@ -53,21 +56,15 @@ export default function StrokeOrderPage() {
             const ctx = audioContextRef.current;
             if (!ctx) return;
             if (ctx.state === 'suspended') ctx.resume();
-
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-
             osc.type = type;
             osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
-            if (freqEnd) {
-                osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + duration);
-            }
+            if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + duration);
             gain.gain.setValueAtTime(volume, ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-
             osc.connect(gain);
             gain.connect(ctx.destination);
-
             osc.start();
             osc.stop(ctx.currentTime + duration);
         } catch (e) {
@@ -96,7 +93,6 @@ export default function StrokeOrderPage() {
         });
     };
 
-    // --- Quiz Logic ---
     const startQuizForWriter = (writer) => {
         writer.quiz({
             onCorrectStroke: playCorrectSound,
@@ -124,73 +120,55 @@ export default function StrokeOrderPage() {
         if (quizChar && document.getElementById('quiz-writer-target')) {
             const target = document.getElementById('quiz-writer-target');
             target.innerHTML = '';
-
             const writer = window.HanziWriter.create(target, quizChar, {
                 width: 300,
                 height: 300,
                 padding: 20,
                 showOutline: true,
-                strokeAnimationSpeed: 1, // Normal speed for hint
+                strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 200,
-                radicalColor: '#166534',
-                strokeColor: '#333333',
+                radicalColor: '#4f46e5',
+                strokeColor: '#1e293b',
                 showCharacter: false,
-                outlineColor: '#999999',
+                outlineColor: '#cbd5e1',
                 drawingWidth: 50,
                 lenience: 2.0,
             });
-
             startQuizForWriter(writer);
             quizWriterRef.current = writer;
         }
     }, [quizChar, quizQueue, currentQuizIndex]);
 
-    // --- Hint & Ad Logic ---
     const handleHintClick = () => {
         if (!quizChar) return;
-
         const now = Date.now();
-
-        // Check Global Expiry
         if (unlockExpiry && now < unlockExpiry) {
             playHintAnimation();
         } else {
-            // Needed to watch ad
-            setAdTimer(5); // Reset timer to 5s
+            setAdTimer(5);
             setShowAd(true);
         }
     };
 
-    // Ad Timer & AdSense Trigger
     useEffect(() => {
         let interval;
         if (showAd) {
-            // Trigger AdSense when modal opens
             try {
-                // Ensure we only push once per show session reset
                 if (adTimer === 5) {
-                    // Safe push
                     if (window && window.adsbygoogle) {
-                        try {
-                            window.adsbygoogle.push({});
-                        } catch (e) {/* Ignore if pushed already */ }
+                        try { window.adsbygoogle.push({}); } catch (e) { }
                     }
                 }
-            } catch (e) {
-                console.error("AdSense error", e);
-            }
+            } catch (e) {}
 
             if (adTimer > 0) {
-                interval = setInterval(() => {
-                    setAdTimer((prev) => prev - 1);
-                }, 1000);
+                interval = setInterval(() => setAdTimer(prev => prev - 1), 1000);
             } else if (adTimer === 0) {
-                // Ad Finished
                 const timeout = setTimeout(() => {
                     setShowAd(false);
                     unlockGlobalHints();
                     playHintAnimation();
-                }, 1000); // Give user 1s to see "Finished"
+                }, 1000);
                 return () => clearTimeout(timeout);
             }
         }
@@ -198,30 +176,23 @@ export default function StrokeOrderPage() {
     }, [showAd, adTimer]);
 
     const unlockGlobalHints = () => {
-        const thirtyMinutes = 30 * 60 * 1000;
-        setUnlockExpiry(Date.now() + thirtyMinutes);
+        setUnlockExpiry(Date.now() + 30 * 60 * 1000);
     };
 
     const playHintAnimation = () => {
         const writer = quizWriterRef.current;
         if (!writer) return;
-
-        // 1. Cancel Quiz (stop accepting input)
         writer.cancelQuiz();
-
-        // 2. Play Animation (Show Answer)
         writer.animateCharacter({
             onComplete: () => {
-                // 3. Restart Quiz (Back to practice)
                 setTimeout(() => {
-                    writer.hideCharacter(); // Clear filled strokes
-                    startQuizForWriter(writer); // Restart
+                    writer.hideCharacter();
+                    startQuizForWriter(writer);
                 }, 1000);
             }
         });
     };
 
-    // --- List Initialization ---
     const [selectedChars, setSelectedChars] = useState(new Set());
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
@@ -239,27 +210,22 @@ export default function StrokeOrderPage() {
         if (selectedChars.size === 0) return;
         setIsDownloading(true);
         setDownloadProgress(0);
-
         try {
             const JSZip = (await import('jszip')).default;
             const { saveAs } = await import('file-saver');
             const { recordHanziVideo } = await import('@/utils/hanziRecorder');
-
             const zip = new JSZip();
             let completed = 0;
             const charsArray = Array.from(selectedChars);
-
             for (const char of charsArray) {
                 const blob = await recordHanziVideo({ char }, 1080, 1440, (internalProgress) => {
                     const currentPercent = ((completed + internalProgress) / charsArray.length) * 100;
                     setDownloadProgress(currentPercent.toFixed(1));
                 });
                 zip.file(`${char}.webm`, blob);
-
                 completed++;
                 setDownloadProgress(((completed / charsArray.length) * 100).toFixed(1));
             }
-
             const content = await zip.generateAsync({ type: 'blob' });
             saveAs(content, `hanzi_videos_${Date.now()}.zip`);
         } catch (err) {
@@ -272,24 +238,22 @@ export default function StrokeOrderPage() {
 
     const initWriters = (chars) => {
         if (!containerRef.current || !window.HanziWriter) return;
-
         containerRef.current.innerHTML = '';
         writersRef.current = [];
-
         const charArray = chars.split('').filter(char => /[\u4E00-\u9FFF]/.test(char));
         const grid = document.createElement('div');
-        grid.className = "flex flex-wrap justify-center gap-8";
+        grid.className = "flex flex-wrap justify-center gap-6";
         containerRef.current.appendChild(grid);
 
         charArray.forEach((char, index) => {
             const wrapper = document.createElement('div');
-            wrapper.className = `flex flex-col items-center gap-2 p-2 rounded-xl transition-all border-2 ${selectedChars.has(char) ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-transparent'}`;
+            const isSelected = selectedChars.has(char);
+            wrapper.className = `group relative flex flex-col items-center bg-white p-4 rounded-3xl transition-all border-2 ${isSelected ? 'border-indigo-500 shadow-md shadow-indigo-100 ring-4 ring-indigo-50' : 'border-slate-100 shadow-sm hover:border-indigo-300 hover:shadow-md'}`;
             grid.appendChild(wrapper);
 
-            // Checkbox for selection
             const checkbox = document.createElement('div');
-            checkbox.className = `self-end w-5 h-5 rounded border mb-[-24px] z-10 cursor-pointer flex items-center justify-center transition-colors ${selectedChars.has(char) ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`;
-            checkbox.innerHTML = selectedChars.has(char) ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : '';
+            checkbox.className = `absolute top-3 right-3 w-5 h-5 rounded-md cursor-pointer flex items-center justify-center transition-colors z-10 ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-slate-50 border-2 border-slate-300'}`;
+            checkbox.innerHTML = isSelected ? '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : '';
             checkbox.onclick = (e) => {
                 e.stopPropagation();
                 toggleSelectChar(char);
@@ -298,7 +262,7 @@ export default function StrokeOrderPage() {
 
             const div = document.createElement('div');
             div.id = `writer-${index}-${Date.now()}`;
-            div.className = "bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-blue-400 transition-colors";
+            div.className = "bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:border-indigo-400 transition-colors mt-2";
             div.style.width = '200px';
             div.style.height = '200px';
             wrapper.appendChild(div);
@@ -306,35 +270,35 @@ export default function StrokeOrderPage() {
             const writer = window.HanziWriter.create(div, char, {
                 width: 200,
                 height: 200,
-                padding: 10,
+                padding: 15,
                 showOutline: true,
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 50,
-                radicalColor: '#166534',
-                strokeColor: '#333333',
+                radicalColor: '#4f46e5',
+                strokeColor: '#1e293b',
+                outlineColor: '#e2e8f0',
             });
-
             writersRef.current.push(writer);
 
             const controlsDiv = document.createElement('div');
-            controlsDiv.className = "flex items-center gap-3 mt-2";
+            controlsDiv.className = "flex items-center gap-2 mt-4 w-full justify-between";
             wrapper.appendChild(controlsDiv);
 
             const playBtn = document.createElement('button');
-            playBtn.className = "p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100";
-            playBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            playBtn.className = "flex-1 flex justify-center items-center py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-indigo-600 rounded-xl transition-colors font-semibold text-sm gap-1";
+            playBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ดูขีด`;
             playBtn.onclick = () => writer.animateCharacter();
             controlsDiv.appendChild(playBtn);
 
             const quizBtn = document.createElement('button');
-            quizBtn.className = "p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-100";
-            quizBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>`;
-            quizBtn.onclick = () => openQuizModal(char); // Open Modal
+            quizBtn.className = "flex-1 flex justify-center items-center py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl transition-colors font-semibold text-sm gap-1";
+            quizBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> เขียน`;
+            quizBtn.onclick = () => openQuizModal(char);
             controlsDiv.appendChild(quizBtn);
-
+            
             const downloadBtn = document.createElement('button');
-            downloadBtn.className = "text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-300 font-bold transition-colors h-9 flex items-center gap-1";
-            downloadBtn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Video`;
+            downloadBtn.className = "flex-none flex justify-center items-center w-10 h-9 bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 rounded-xl transition-colors";
+            downloadBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
             downloadBtn.onclick = () => handleDownloadSingle(char);
             controlsDiv.appendChild(downloadBtn);
         });
@@ -359,7 +323,7 @@ export default function StrokeOrderPage() {
         setQuizChar(null);
         setQuizQueue([]);
         setCurrentQuizIndex(-1);
-        setShowAd(false); // Close ad if modal closed
+        setShowAd(false);
     };
 
     const handleSearch = (e) => {
@@ -388,112 +352,117 @@ export default function StrokeOrderPage() {
     };
 
     return (
-        <main className="flex-1 h-full bg-slate-50 py-4 sm:py-8 px-2 sm:px-4 md:px-8 selection:bg-blue-100">
-            <div className="w-full text-center">
-                <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-4 sm:mb-8 px-2">
-                    ฝึกเขียนภาษาจีน <span className="text-blue-600">Stroke Order</span>
-                </h1>
+        <main className="flex-1 min-h-screen bg-slate-100 py-6 sm:py-10 px-4 sm:px-8">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 text-white">
+                            <PenIcon />
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">ฝึกเขียนภาษาจีน</h1>
+                    </div>
+                </div>
 
-                <div className="bg-white p-3 sm:p-4 md:p-8 rounded-xl shadow-sm">
-                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center mb-4 sm:mb-8">
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="พิมพ์คำศัพท์ (เช่น 你好)"
-                            className="text-center text-xl sm:text-2xl md:text-3xl w-full sm:w-64 h-12 sm:h-14 md:h-16 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-slate-800 font-bold"
-                        />
-                        <button type="submit" className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-md flex justify-center items-center gap-2 h-12 sm:h-14 md:h-16 text-base sm:text-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            ค้นหา
+                <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-sm border border-slate-200 text-center mb-8">
+                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8 max-w-3xl mx-auto">
+                        <div className="relative w-full">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                <SearchIcon />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="พิมพ์คำศัพท์ภาษาจีน (เช่น 你好)"
+                                className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:bg-white transition-all text-slate-800 font-bold text-lg sm:text-xl placeholder:text-slate-400 placeholder:font-medium"
+                            />
+                        </div>
+                        <button type="submit" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap text-lg">
+                            ค้นหาลำดับขีด
                         </button>
                     </form>
 
-                    <div className="mb-4 sm:mb-8 min-h-[200px] sm:min-h-[250px]" ref={containerRef}></div>
-
-                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
-                        <button onClick={handleAnimateAll} className="px-3 sm:px-6 py-2 sm:py-3 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition-colors shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
-                            <span className="hidden sm:inline">เล่นทั้งหมด (Animate All)</span>
-                            <span className="sm:hidden">เล่น</span>
-                        </button>
-
-                        <button onClick={handleQuizAll} className="px-3 sm:px-6 py-2 sm:py-3 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-colors shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                            <span className="hidden sm:inline">ลองเขียนทั้งหมด (Quiz All)</span>
-                            <span className="sm:hidden">ฝึกเขียน</span>
-                        </button>
-
-                        <button
-                            onClick={handleDownloadZip}
-                            disabled={selectedChars.size === 0 || isDownloading}
-                            className={`px-3 sm:px-6 py-2 sm:py-3 font-bold rounded-lg transition-all shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${selectedChars.size === 0 || isDownloading ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                        >
-                            {isDownloading ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
-                                    {downloadProgress}%
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    <span className="hidden sm:inline">โหลดที่เลือก ({selectedChars.size})</span>
-                                    <span className="sm:hidden">ZIP ({selectedChars.size})</span>
-                                </>
-                            )}
-                        </button>
+                    <div className="mb-8 min-h-[200px]" ref={containerRef}>
+                        {!displayChars && (
+                            <div className="h-[200px] flex items-center justify-center text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-3xl">
+                                พิมพ์ตัวอักษรจีนด้านบนแล้วกดค้นหา เพื่อดูวิธีเขียนและฝึกเขียน
+                            </div>
+                        )}
                     </div>
 
-                    <p className="mt-4 sm:mt-6 text-slate-500 text-xs sm:text-sm px-2">
-                        * พิมพ์คำศัพท์ลงในช่องแล้วกดค้นหา เพื่อดูวิธีการเขียน<br />
-                        ** คลิกเลือกตัวอักษรที่ต้องการ แล้วกด &quot;โหลดที่เลือก&quot; เพื่อดาวน์โหลดเป็นไฟล์ ZIP
-                    </p>
+                    {displayChars && (
+                        <div className="flex flex-wrap justify-center gap-3">
+                            <button onClick={handleAnimateAll} className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-sm active:scale-95 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+                                เล่นอัตโนมัติทั้งหมด
+                            </button>
+
+                            <button onClick={handleQuizAll} className="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition-all shadow-sm active:scale-95 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                                เข้าโหมดฝึกเขียนทั้งหมด
+                            </button>
+
+                            <button
+                                onClick={handleDownloadZip}
+                                disabled={selectedChars.size === 0 || isDownloading}
+                                className={`px-6 py-3 font-bold rounded-xl transition-all flex items-center gap-2 ${selectedChars.size === 0 || isDownloading ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-800 text-white hover:bg-slate-900 active:scale-95 shadow-sm'}`}
+                            >
+                                {isDownloading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                                        {downloadProgress}%
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        โหลด Video ที่เลือก ({selectedChars.size})
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Quiz Modal */}
             {quizChar && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 w-full max-w-lg relative animate-in fade-in zoom-in duration-200 max-h-[95vh] overflow-y-auto">
-                        <button onClick={closeQuizModal} className="absolute top-2 right-2 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-600 p-1 sm:p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-md relative animate-in zoom-in-95 duration-200 flex flex-col items-center">
+                        <button onClick={closeQuizModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
 
-                        <h3 className="text-lg sm:text-2xl font-bold text-slate-800 mb-4 sm:mb-6 text-center pr-8">
-                            ฝึกเขียน: <span className="text-blue-600 text-2xl sm:text-4xl ml-1 sm:ml-2">{quizChar}</span>
-                            {quizQueue.length > 0 && <span className="text-xs sm:text-sm text-slate-400 ml-2 sm:ml-4 font-normal">({currentQuizIndex + 1}/{quizQueue.length})</span>}
+                        <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                            ฝึกเขียน: <span className="text-indigo-600 text-4xl">{quizChar}</span>
+                            {quizQueue.length > 0 && <span className="text-sm bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-bold">({currentQuizIndex + 1}/{quizQueue.length})</span>}
                         </h3>
 
-                        <div className="flex justify-center mb-4 sm:mb-6">
-                            <div
-                                id="quiz-writer-target"
-                                className="border-4 border-dashed border-slate-200 rounded-xl bg-slate-50 transition-colors w-[250px] h-[250px] sm:w-[300px] sm:h-[300px]"
-                            ></div>
-                        </div>
+                        <div
+                            id="quiz-writer-target"
+                            className="border-2 border-slate-200 rounded-3xl bg-slate-50 shadow-inner w-[300px] h-[300px] mb-6 flex justify-center items-center"
+                        ></div>
 
-                        <p className="text-center text-slate-500 mb-3 sm:mb-4 text-xs sm:text-sm px-2">
-                            ลากเส้นตามลำดับขีด | คลิกกรอบเพื่อดูเฉลย
+                        <p className="text-center text-slate-500 mb-6 text-sm font-medium">
+                            ลากเส้นตามลำดับขีดที่ถูกต้องบนกระดาน
                         </p>
 
-                        <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
-                            <button onClick={() => quizWriterRef.current?.quiz({ onCorrectStroke: playCorrectSound, onMistake: playMistakeSound, onComplete: playCompleteSound })} className="px-3 sm:px-4 py-2 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-colors text-sm sm:text-base">
-                                เริ่มใหม่
+                        <div className="flex w-full gap-3">
+                            <button onClick={() => quizWriterRef.current?.quiz({ onCorrectStroke: playCorrectSound, onMistake: playMistakeSound, onComplete: playCompleteSound })} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                                เริ่มเขียนใหม่
                             </button>
                             <button
                                 onClick={handleHintClick}
-                                className={`px-3 sm:px-4 py-2 font-bold rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${unlockExpiry && Date.now() < unlockExpiry ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
+                                className={`flex-1 py-3 font-bold rounded-xl transition-colors flex justify-center items-center gap-2 ${unlockExpiry && Date.now() < unlockExpiry ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200"}`}
                             >
                                 {unlockExpiry && Date.now() < unlockExpiry ? (
                                     <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                                        <span className="hidden sm:inline">ดูเฉลยฟรี (30m)</span>
-                                        <span className="sm:hidden">เฉลย</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                        ดูเฉลยฟรี
                                     </>
                                 ) : (
                                     <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
-                                        <span className="hidden sm:inline">ดูเฉลย (Ad)</span>
-                                        <span className="sm:hidden">เฉลย</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
+                                        ดูเฉลย (Ad)
                                     </>
                                 )}
                             </button>
@@ -502,17 +471,16 @@ export default function StrokeOrderPage() {
                 </div>
             )}
 
-            {/* AdSense Modal (Interstitial) */}
+            {/* AdSense Modal */}
             {showAd && (
-                <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center text-white p-2 sm:p-4">
-                    <div className="bg-white text-black p-3 sm:p-4 rounded-xl w-full max-w-lg shadow-2xl relative">
-                        <div className="text-center mb-3 sm:mb-4">
-                            <h3 className="text-lg sm:text-xl font-bold text-slate-800">Advertisement</h3>
-                            <p className="text-slate-500 text-xs sm:text-sm">รอ {adTimer} วินาที</p>
+                <div className="fixed inset-0 bg-slate-900/90 z-50 flex flex-col items-center justify-center p-4">
+                    <div className="bg-white p-6 rounded-3xl w-full max-w-md shadow-2xl relative">
+                        <div className="text-center mb-6">
+                            <h3 className="text-xl font-bold text-slate-800">ผู้สนับสนุน (Sponsor)</h3>
+                            <p className="text-slate-500 text-sm font-medium mt-1">กรุณารอ {adTimer} วินาทีเพื่อปลดล็อกเฉลย</p>
                         </div>
 
-                        {/* Adsense Placement */}
-                        <div className="flex justify-center items-center bg-slate-100 min-h-[200px] sm:min-h-[250px] rounded-lg overflow-hidden mb-3 sm:mb-4 border border-slate-200">
+                        <div className="flex justify-center items-center bg-slate-50 min-h-[250px] rounded-2xl overflow-hidden mb-6 border border-slate-200">
                             <ins className="adsbygoogle"
                                 style={{ display: 'block', width: '100%', maxWidth: '300px', height: '250px' }}
                                 data-ad-client="ca-pub-6059901629514213"
@@ -522,15 +490,15 @@ export default function StrokeOrderPage() {
                             </ins>
                         </div>
 
-                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mb-2">
+                        <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-2">
                             <div
-                                className="bg-amber-500 h-full transition-all duration-1000 ease-linear"
+                                className="bg-indigo-500 h-full transition-all duration-1000 ease-linear rounded-full"
                                 style={{ width: `${(5 - adTimer) * 20}%` }}
                             ></div>
                         </div>
 
                         {adTimer === 0 && (
-                            <p className="text-center text-green-600 font-bold animate-bounce text-sm sm:text-base">
+                            <p className="text-center text-emerald-600 font-bold animate-bounce mt-4">
                                 กำลังปลดล็อก...
                             </p>
                         )}
