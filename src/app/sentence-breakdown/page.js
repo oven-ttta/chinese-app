@@ -164,6 +164,7 @@ export default function SentenceBreakdown() {
           new Paragraph({
             children: [
               new TextRun({
+                font: "Sarabun",
                 text: item.sentence.index || "",
                 bold: true,
                 size: 32, // 16pt
@@ -184,7 +185,7 @@ export default function SentenceBreakdown() {
             rows.push(
               new TableRow({
                 children: item.blocks.map(b => new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: b.topNote || "", size: 24 })], alignment: AlignmentType.CENTER })],
+                  children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.topNote || "", size: 24 })], alignment: AlignmentType.CENTER })],
                   borders: noBorders,
                   verticalAlign: VerticalAlign.BOTTOM,
                 })),
@@ -196,7 +197,7 @@ export default function SentenceBreakdown() {
             rows.push(
               new TableRow({
                 children: item.blocks.map(b => new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: b.showTopArrow ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })],
+                  children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.showTopArrow ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })],
                   borders: noBorders,
                   verticalAlign: VerticalAlign.BOTTOM,
                 })),
@@ -208,7 +209,7 @@ export default function SentenceBreakdown() {
           rows.push(
             new TableRow({
               children: item.blocks.map(b => new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: b.thai || "", size: 24 })], alignment: AlignmentType.CENTER })],
+                children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.thai || "", size: 24 })], alignment: AlignmentType.CENTER })],
                 borders: noBorders,
                 verticalAlign: VerticalAlign.BOTTOM,
               })),
@@ -219,7 +220,7 @@ export default function SentenceBreakdown() {
           rows.push(
             new TableRow({
               children: item.blocks.map(b => new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: b.hanzi || "", size: 36, bold: true })], alignment: AlignmentType.CENTER })],
+                children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.hanzi || "", size: 36, bold: true })], alignment: AlignmentType.CENTER })],
                 borders: noBorders,
                 verticalAlign: VerticalAlign.CENTER,
               })),
@@ -230,7 +231,7 @@ export default function SentenceBreakdown() {
           rows.push(
             new TableRow({
               children: item.blocks.map(b => new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: b.pinyin ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })],
+                children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.pinyin ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })],
                 borders: noBorders,
                 verticalAlign: VerticalAlign.TOP,
               })),
@@ -241,7 +242,7 @@ export default function SentenceBreakdown() {
           rows.push(
             new TableRow({
               children: item.blocks.map(b => new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: b.pinyin || "", size: 24 })], alignment: AlignmentType.CENTER })],
+                children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.pinyin || "", size: 24 })], alignment: AlignmentType.CENTER })],
                 borders: noBorders,
                 verticalAlign: VerticalAlign.TOP,
               })),
@@ -267,10 +268,10 @@ export default function SentenceBreakdown() {
         }
 
         // 3. Sentence Translations
-        if (item.sentence.hanzi) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.hanzi, size: 28 })], spacing: { before: 200 } }));
-        if (item.sentence.pinyin) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.pinyin, size: 28 })] }));
-        if (item.sentence.english) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.english, size: 28 })] }));
-        if (item.sentence.thai) children.push(new Paragraph({ children: [new TextRun({ text: item.sentence.thai, size: 28 })], spacing: { before: 100 } }));
+        if (item.sentence.hanzi) children.push(new Paragraph({ children: [new TextRun({ font: "Sarabun", text: item.sentence.hanzi, size: 28 })], spacing: { before: 200 } }));
+        if (item.sentence.pinyin) children.push(new Paragraph({ children: [new TextRun({ font: "Sarabun", text: item.sentence.pinyin, size: 28 })] }));
+        if (item.sentence.english) children.push(new Paragraph({ children: [new TextRun({ font: "Sarabun", text: item.sentence.english, size: 28 })] }));
+        if (item.sentence.thai) children.push(new Paragraph({ children: [new TextRun({ font: "Sarabun", text: item.sentence.thai, size: 28 })], spacing: { before: 100 } }));
         
         // Add spacer
         children.push(new Paragraph({ text: "" }));
