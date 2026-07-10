@@ -22,6 +22,9 @@ export default function Navbar() {
                     <Link href="/stroke-order" className="hover:text-blue-600 transition-colors py-1 px-2 sm:py-1.5 sm:px-3 rounded-md hover:bg-blue-50">
                         ฝึกเขียน
                     </Link>
+                    <Link href="/sentence-breakdown" className="hover:text-blue-600 transition-colors py-1 px-2 sm:py-1.5 sm:px-3 rounded-md hover:bg-blue-50">
+                        สร้างประโยค
+                    </Link>
                     <Link href="/report" className="hover:text-blue-600 transition-colors py-1 px-2 sm:py-1.5 sm:px-3 rounded-md hover:bg-blue-50">
                         สรุป
                     </Link>
