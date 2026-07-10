@@ -57,6 +57,58 @@ export default function SentenceBreakdown() {
     }
   };
 
+  const downloadDocx = async () => {
+    if (!previewRef.current) return;
+    try {
+      const { Document, Packer, Paragraph, ImageRun } = await import("docx");
+      const canvas = await html2canvas(previewRef.current, { backgroundColor: "#ffffff", scale: 2 });
+      
+      // Convert canvas to blob then arrayBuffer
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      const arrayBuffer = await blob.arrayBuffer();
+      
+      // Calculate scaled dimensions to fit Word page width (approx 600px)
+      const maxWidth = 600;
+      let width = canvas.width;
+      let height = canvas.height;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: arrayBuffer,
+                    transformation: {
+                      width: width,
+                      height: height,
+                    },
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+
+      const buffer = await Packer.toBlob(doc);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(buffer);
+      a.download = `sentence_breakdown_${Date.now()}.docx`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (error) {
+      console.error("Failed to generate docx", error);
+      alert("Failed to generate docx.");
+    }
+  };
+
   const [quickInput, setQuickInput] = useState("");
 
   const handleQuickGenerate = () => {
@@ -237,12 +289,20 @@ export default function SentenceBreakdown() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-800">ตัวอย่าง (Preview)</h2>
-            <button 
-              onClick={downloadImage}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition-colors flex items-center gap-2"
-            >
-              <span>ดาวน์โหลดเป็นรูปภาพ</span>
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={downloadImage}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-bold shadow-sm transition-colors text-sm"
+              >
+                ดาวน์โหลดรูปภาพ
+              </button>
+              <button 
+                onClick={downloadDocx}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-bold shadow-sm transition-colors text-sm"
+              >
+                ดาวน์โหลด Word (.docx)
+              </button>
+            </div>
           </div>
           
           <div className="bg-white overflow-hidden rounded-2xl shadow-lg border border-slate-200">
