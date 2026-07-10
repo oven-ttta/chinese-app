@@ -4,18 +4,14 @@ import { useState, useRef } from "react";
 import html2canvas from "html2canvas";
 
 export default function SentenceBreakdown() {
-  const [blocks, setBlocks] = useState([
-    { id: 1, thai: "ฉัน", hanzi: "我", pinyin: "wǒ", topNote: "", showTopArrow: false },
-    { id: 2, thai: "รัก", hanzi: "爱", pinyin: "ài", topNote: "รัก", showTopArrow: true },
-    { id: 3, thai: "คุณ", hanzi: "你", pinyin: "nǐ", topNote: "", showTopArrow: false },
-  ]);
+  const [blocks, setBlocks] = useState([]);
 
   const [sentence, setSentence] = useState({
-    index: "1.",
-    hanzi: "我爱你。",
-    pinyin: "Wǒ ài nǐ.",
-    english: "I love you.",
-    thai: "ฉันรักคุณ"
+    index: "",
+    hanzi: "",
+    pinyin: "",
+    english: "",
+    thai: ""
   });
 
   const previewRef = useRef(null);
