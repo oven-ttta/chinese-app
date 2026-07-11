@@ -160,7 +160,7 @@ export default function WordCard({ word, isActive, isSelected, onPlay, onStop, o
                 {typeof onSelect === 'function' && (
                     <div
                         onClick={(e) => { e.stopPropagation(); onSelect(); }}
-                        className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-md flex items-center justify-center transition-colors z-10 ${isSelected ? 'bg-indigo-600 border-indigo-600 shadow-sm' : 'bg-slate-50 border-2 border-slate-300'}`}
+                        className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-md flex items-center justify-center transition-colors z-10 cursor-pointer ${isSelected ? 'bg-indigo-600 border-indigo-600 shadow-sm' : 'bg-slate-50 border-2 border-slate-300'}`}
                     >
                         {isSelected && <CheckIcon />}
                     </div>
