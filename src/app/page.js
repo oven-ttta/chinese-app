@@ -164,7 +164,7 @@ export default function Home() {
         if (dateA !== dateB) {
           return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
         }
-        return sortOrder === 'newest' ? b.id.localeCompare(a.id) : a.id.localeCompare(b.id);
+        return sortOrder === 'newest' ? String(b.id).localeCompare(String(a.id)) : String(a.id).localeCompare(String(b.id));
       } else if (sortOrder === 'pinyin_asc') {
         return (a.pinyin || '').localeCompare(b.pinyin || '');
       } else if (sortOrder === 'pinyin_desc') {
