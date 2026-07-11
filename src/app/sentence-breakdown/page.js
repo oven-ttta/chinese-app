@@ -360,7 +360,7 @@ export default function SentenceBreakdown() {
               </div>
             ))}
             
-            <button onClick={addNewItem} className="w-full py-4 border-2 border-dashed border-slate-300 text-slate-500 font-bold rounded-2xl hover:bg-white hover:border-indigo-300 hover:text-indigo-600 transition-all flex items-center justify-center gap-2 group">
+            <button onClick={addNewItem} className="w-full py-4 border-2 border-dashed border-slate-300 text-slate-500 font-bold rounded-2xl hover:bg-white hover:border-indigo-300 hover:text-indigo-600 transition-all flex items-center justify-center gap-2 group cursor-pointer">
               <span className="bg-slate-200 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 p-1 rounded-full transition-colors"><PlusIcon /></span> 
               เพิ่มประโยคใหม่
             </button>
@@ -372,10 +372,10 @@ export default function SentenceBreakdown() {
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="text-lg font-bold text-slate-800">ตัวอย่าง (Preview)</h2>
             <div className="flex gap-2 w-full sm:w-auto">
-              <button onClick={downloadImage} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm">
+              <button onClick={downloadImage} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer">
                 <DownloadIcon /> รูปภาพ
               </button>
-              <button onClick={downloadDocx} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm">
+              <button onClick={downloadDocx} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer">
                 <DownloadIcon /> Word
               </button>
             </div>

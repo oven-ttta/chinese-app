@@ -175,8 +175,8 @@ export default function ContributorResults() {
                             <div className="flex flex-col">
                                 <span className="text-sm font-bold text-slate-800">เลือกแล้ว {selectedIds.size} คำ</span>
                                 <div className="flex gap-3">
-                                    <button onClick={selectAll} className="text-xs text-blue-600 hover:underline font-medium">เลือกทั้งหมด</button>
-                                    <button onClick={deselectAll} className="text-xs text-red-600 hover:underline font-medium">ล้าง</button>
+                                    <button onClick={selectAll} className="text-xs text-blue-600 hover:underline font-medium cursor-pointer">เลือกทั้งหมด</button>
+                                    <button onClick={deselectAll} className="text-xs text-red-600 hover:underline font-medium cursor-pointer">ล้าง</button>
                                 </div>
                             </div>
 

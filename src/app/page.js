@@ -301,8 +301,8 @@ export default function Home() {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-indigo-900 bg-indigo-100 px-3 py-1 rounded-lg">เลือกแล้ว {selectedIds.size} คำ</span>
-            <button onClick={selectAll} className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold underline-offset-4 hover:underline">เลือกทั้งหมดหน้านี้</button>
-            <button onClick={deselectAll} className="text-sm text-slate-500 hover:text-red-500 font-semibold underline-offset-4 hover:underline">ล้างการเลือก</button>
+            <button onClick={selectAll} className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold underline-offset-4 hover:underline cursor-pointer">เลือกทั้งหมดหน้านี้</button>
+            <button onClick={deselectAll} className="text-sm text-slate-500 hover:text-red-500 font-semibold underline-offset-4 hover:underline cursor-pointer">ล้างการเลือก</button>
           </div>
 
           <button

@@ -285,19 +285,19 @@ export default function StrokeOrderPage() {
             wrapper.appendChild(controlsDiv);
 
             const playBtn = document.createElement('button');
-            playBtn.className = "flex-1 flex justify-center items-center py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-indigo-600 rounded-xl transition-colors font-semibold text-sm gap-1";
+            playBtn.className = "flex-1 flex justify-center items-center py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-indigo-600 rounded-xl transition-colors font-semibold text-sm gap-1 cursor-pointer";
             playBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ดูขีด`;
             playBtn.onclick = () => writer.animateCharacter();
             controlsDiv.appendChild(playBtn);
 
             const quizBtn = document.createElement('button');
-            quizBtn.className = "flex-1 flex justify-center items-center py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl transition-colors font-semibold text-sm gap-1";
+            quizBtn.className = "flex-1 flex justify-center items-center py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl transition-colors font-semibold text-sm gap-1 cursor-pointer";
             quizBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> เขียน`;
             quizBtn.onclick = () => openQuizModal(char);
             controlsDiv.appendChild(quizBtn);
             
             const downloadBtn = document.createElement('button');
-            downloadBtn.className = "flex-none flex justify-center items-center w-10 h-9 bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 rounded-xl transition-colors";
+            downloadBtn.className = "flex-none flex justify-center items-center w-10 h-9 bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 rounded-xl transition-colors cursor-pointer";
             downloadBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
             downloadBtn.onclick = () => handleDownloadSingle(char);
             controlsDiv.appendChild(downloadBtn);
@@ -377,7 +377,7 @@ export default function StrokeOrderPage() {
                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:bg-white transition-all text-slate-800 font-bold text-lg sm:text-xl placeholder:text-slate-400 placeholder:font-medium"
                             />
                         </div>
-                        <button type="submit" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap text-lg">
+                        <button type="submit" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap text-lg cursor-pointer">
                             ค้นหาลำดับขีด
                         </button>
                     </form>
@@ -392,12 +392,12 @@ export default function StrokeOrderPage() {
 
                     {displayChars && (
                         <div className="flex flex-wrap justify-center gap-3">
-                            <button onClick={handleAnimateAll} className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-sm active:scale-95 flex items-center gap-2">
+                            <button onClick={handleAnimateAll} className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
                                 เล่นอัตโนมัติทั้งหมด
                             </button>
 
-                            <button onClick={handleQuizAll} className="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition-all shadow-sm active:scale-95 flex items-center gap-2">
+                            <button onClick={handleQuizAll} className="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
                                 เข้าโหมดฝึกเขียนทั้งหมด
                             </button>
@@ -428,7 +428,7 @@ export default function StrokeOrderPage() {
             {quizChar && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-md relative animate-in zoom-in-95 duration-200 flex flex-col items-center">
-                        <button onClick={closeQuizModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
+                        <button onClick={closeQuizModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
 
