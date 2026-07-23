@@ -54,6 +54,45 @@ const vowels = [
   { id: "ü", char: "ü", label: "อวี", speech: "鱼", color: "teal" },
 ];
 
+const finals = [
+  { id: "final-a", char: "a", speech: "啊" },
+  { id: "final-o", char: "o", speech: "喔" },
+  { id: "final-e", char: "e", speech: "鹅" },
+  { id: "final-i", char: "i", speech: "衣" },
+  { id: "final-u", char: "u", speech: "乌" },
+  { id: "final-ü", char: "ü", speech: "鱼" },
+  { id: "final-er", char: "er", speech: "儿" },
+  { id: "final-ai", char: "ai", speech: "爱" },
+  { id: "final-ei", char: "ei", speech: "诶" },
+  { id: "final-ao", char: "ao", speech: "奥" },
+  { id: "final-ou", char: "ou", speech: "欧" },
+  { id: "final-ia", char: "ia", speech: "呀" },
+  { id: "final-ie", char: "ie", speech: "耶" },
+  { id: "final-ua", char: "ua", speech: "蛙" },
+  { id: "final-uo", char: "uo", speech: "窝" },
+  { id: "final-üe", char: "üe", speech: "月" },
+  { id: "final-iao", char: "iao", speech: "腰" },
+  { id: "final-iou", char: "iou", speech: "优" },
+  { id: "final-uai", char: "uai", speech: "歪" },
+  { id: "final-uei", char: "uei", speech: "威" },
+  { id: "final-an", char: "an", speech: "安" },
+  { id: "final-ian", char: "ian", speech: "烟" },
+  { id: "final-uan", char: "uan", speech: "弯" },
+  { id: "final-üan", char: "üan", speech: "冤" },
+  { id: "final-en", char: "en", speech: "恩" },
+  { id: "final-in", char: "in", speech: "因" },
+  { id: "final-uen", char: "uen", speech: "温" },
+  { id: "final-ün", char: "ün", speech: "晕" },
+  { id: "final-ang", char: "ang", speech: "昂" },
+  { id: "final-iang", char: "iang", speech: "央" },
+  { id: "final-uang", char: "uang", speech: "汪" },
+  { id: "final-eng", char: "eng", speech: "鞥" },
+  { id: "final-ing", char: "ing", speech: "英" },
+  { id: "final-ueng", char: "ueng", speech: "翁" },
+  { id: "final-ong", char: "ong", speech: "东" },
+  { id: "final-iong", char: "iong", speech: "庸" },
+];
+
 const tones = [
   { id: "tone1", char: "mā", label: "เสียง 1 (สูงราบ)", speech: "妈", color: "indigo" },
   { id: "tone2", char: "má", label: "เสียง 2 (สูงขึ้น)", speech: "麻", color: "indigo" },
@@ -61,44 +100,6 @@ const tones = [
   { id: "tone4", char: "mà", label: "เสียง 4 (ตก)", speech: "骂", color: "indigo" },
 ];
 
-const vocabulary = [
-  { char: "你好", pinyin: "nǐ hǎo", thai: "สวัสดี" },
-  { char: "谢谢", pinyin: "xiè xie", thai: "ขอบคุณ" },
-  { char: "再见", pinyin: "zài jiàn", thai: "ลาก่อน" },
-  { char: "请", pinyin: "qǐng", thai: "กรุณา / เชิญ" },
-  { char: "对不起", pinyin: "duì bu qǐ", thai: "ขอโทษ" },
-  { char: "没关系", pinyin: "méi guān xi", thai: "ไม่เป็นไร" },
-  { char: "是", pinyin: "shì", thai: "ใช่ / เป็น" },
-  { char: "不是", pinyin: "bú shì", thai: "ไม่ใช่" },
-  { char: "有", pinyin: "yǒu", thai: "มี" },
-  { char: "没有", pinyin: "méi yǒu", thai: "ไม่มี" },
-  { char: "我", pinyin: "wǒ", thai: "ฉัน" },
-  { char: "你", pinyin: "nǐ", thai: "คุณ" },
-  { char: "他", pinyin: "tā", thai: "เขา (ผู้ชาย)" },
-  { char: "她", pinyin: "tā", thai: "เขา (ผู้หญิง)" },
-  { char: "我们", pinyin: "wǒ men", thai: "พวกเรา" },
-  { char: "什么", pinyin: "shén me", thai: "อะไร" },
-  { char: "谁", pinyin: "shéi", thai: "ใคร" },
-  { char: "哪里", pinyin: "nǎ lǐ", thai: "ที่ไหน" },
-  { char: "多少", pinyin: "duō shao", thai: "เท่าไร" },
-  { char: "今天", pinyin: "jīn tiān", thai: "วันนี้" },
-  { char: "明天", pinyin: "míng tiān", thai: "พรุ่งนี้" },
-  { char: "昨天", pinyin: "zuó tiān", thai: "เมื่อวาน" },
-  { char: "现在", pinyin: "xiàn zài", thai: "ตอนนี้" },
-  { char: "早上", pinyin: "zǎo shang", thai: "ตอนเช้า" },
-  { char: "晚上", pinyin: "wǎn shang", thai: "ตอนเย็น / กลางคืน" },
-  { char: "吃", pinyin: "chī", thai: "กิน" },
-  { char: "喝", pinyin: "hē", thai: "ดื่ม" },
-  { char: "水", pinyin: "shuǐ", thai: "น้ำ" },
-  { char: "饭", pinyin: "fàn", thai: "ข้าว / อาหาร" },
-  { char: "朋友", pinyin: "péng you", thai: "เพื่อน" },
-  { char: "家", pinyin: "jiā", thai: "บ้าน / ครอบครัว" },
-  { char: "学校", pinyin: "xué xiào", thai: "โรงเรียน" },
-  { char: "老师", pinyin: "lǎo shī", thai: "ครู" },
-  { char: "学生", pinyin: "xué sheng", thai: "นักเรียน" },
-  { char: "喜欢", pinyin: "xǐ huan", thai: "ชอบ" },
-  { char: "学习", pinyin: "xué xí", thai: "เรียน" },
-];
 
 export default function PinyinPage() {
   const [activeId, setActiveId] = useState(null);
@@ -186,6 +187,41 @@ export default function PinyinPage() {
             <h2 className="text-xl sm:text-2xl font-bold text-slate-800">สระเดี่ยว <span className="text-slate-400 text-sm sm:text-base font-medium ml-1">(Simple Vowels)</span></h2>
           </div>
           {renderPinyinCards(vowels, "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4 md:gap-5")}
+        </section>
+
+        <section className="mb-10 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
+          <div className="flex items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-8 bg-cyan-500 rounded-full" />
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
+                ตารางสระและตัวสะกด <span className="text-slate-400 text-sm sm:text-base font-medium ml-1">(Finals 36 รูป)</span>
+              </h2>
+            </div>
+            <span className="hidden sm:inline text-sm text-slate-400">แตะเพื่อฟังเสียงจีน</span>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 overflow-hidden rounded-2xl border border-slate-300 bg-slate-300 gap-px">
+            {finals.map((item) => {
+              const isActive = activeId === item.id;
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => speakChinese(item.speech, item.id)}
+                  className={`relative min-h-16 sm:min-h-20 px-2 py-3 text-lg sm:text-xl font-extrabold transition-colors focus:z-10 focus:outline-none focus:ring-4 focus:ring-cyan-200 ${
+                    isActive
+                      ? "bg-cyan-100 text-cyan-800"
+                      : "bg-white text-slate-800 hover:bg-cyan-50 hover:text-cyan-700"
+                  }`}
+                  aria-label={`ฟังเสียงสระ ${item.char}`}
+                >
+                  {item.char}
+                  <span className={`absolute right-2 top-2 ${isActive ? "text-cyan-600 animate-pulse" : "text-slate-300"}`}>
+                    <SpeakerIcon />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         <section className="mb-10 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
