@@ -100,6 +100,45 @@ const tones = [
   { id: "tone4", char: "mà", label: "เสียง 4 (ตก)", speech: "骂", color: "indigo" },
 ];
 
+const vocabulary = [
+  { char: "你好", pinyin: "nǐ hǎo", thai: "สวัสดี" },
+  { char: "谢谢", pinyin: "xiè xie", thai: "ขอบคุณ" },
+  { char: "再见", pinyin: "zài jiàn", thai: "ลาก่อน" },
+  { char: "请", pinyin: "qǐng", thai: "กรุณา / เชิญ" },
+  { char: "对不起", pinyin: "duì bu qǐ", thai: "ขอโทษ" },
+  { char: "没关系", pinyin: "méi guān xi", thai: "ไม่เป็นไร" },
+  { char: "是", pinyin: "shì", thai: "ใช่ / เป็น" },
+  { char: "不是", pinyin: "bú shì", thai: "ไม่ใช่" },
+  { char: "有", pinyin: "yǒu", thai: "มี" },
+  { char: "没有", pinyin: "méi yǒu", thai: "ไม่มี" },
+  { char: "我", pinyin: "wǒ", thai: "ฉัน" },
+  { char: "你", pinyin: "nǐ", thai: "คุณ" },
+  { char: "他", pinyin: "tā", thai: "เขา (ผู้ชาย)" },
+  { char: "她", pinyin: "tā", thai: "เขา (ผู้หญิง)" },
+  { char: "我们", pinyin: "wǒ men", thai: "พวกเรา" },
+  { char: "什么", pinyin: "shén me", thai: "อะไร" },
+  { char: "谁", pinyin: "shéi", thai: "ใคร" },
+  { char: "哪里", pinyin: "nǎ lǐ", thai: "ที่ไหน" },
+  { char: "多少", pinyin: "duō shao", thai: "เท่าไร" },
+  { char: "今天", pinyin: "jīn tiān", thai: "วันนี้" },
+  { char: "明天", pinyin: "míng tiān", thai: "พรุ่งนี้" },
+  { char: "昨天", pinyin: "zuó tiān", thai: "เมื่อวาน" },
+  { char: "现在", pinyin: "xiàn zài", thai: "ตอนนี้" },
+  { char: "早上", pinyin: "zǎo shang", thai: "ตอนเช้า" },
+  { char: "晚上", pinyin: "wǎn shang", thai: "ตอนเย็น / กลางคืน" },
+  { char: "吃", pinyin: "chī", thai: "กิน" },
+  { char: "喝", pinyin: "hē", thai: "ดื่ม" },
+  { char: "水", pinyin: "shuǐ", thai: "น้ำ" },
+  { char: "饭", pinyin: "fàn", thai: "ข้าว / อาหาร" },
+  { char: "朋友", pinyin: "péng you", thai: "เพื่อน" },
+  { char: "家", pinyin: "jiā", thai: "บ้าน / ครอบครัว" },
+  { char: "学校", pinyin: "xué xiào", thai: "โรงเรียน" },
+  { char: "老师", pinyin: "lǎo shī", thai: "ครู" },
+  { char: "学生", pinyin: "xué sheng", thai: "นักเรียน" },
+  { char: "喜欢", pinyin: "xǐ huan", thai: "ชอบ" },
+  { char: "学习", pinyin: "xué xí", thai: "เรียน" },
+];
+
 
 export default function PinyinPage() {
   const [activeId, setActiveId] = useState(null);
