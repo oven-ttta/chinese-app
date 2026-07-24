@@ -52,7 +52,7 @@ const escapeHtml = (value = "") =>
     .replaceAll("'", "&#039;");
 
 const buildGoogleDocsContent = (items) => {
-  const WORDS_PER_ROW = 4;
+  const WORDS_PER_ROW = 8;
   const noWrap = (value = "") =>
     escapeHtml(value).replaceAll(" ", "&nbsp;");
   const chunkBlocks = (blocks) => {
@@ -67,15 +67,15 @@ const buildGoogleDocsContent = (items) => {
     const tables = chunkBlocks(item.blocks).map((chunk) => {
       const cells = (renderer, extraStyle = "") =>
         chunk.map((block) =>
-          `<td nowrap="nowrap" style="min-width:110px;text-align:center;white-space:nowrap;padding:4px 10px;border:0;vertical-align:middle;${extraStyle}">${renderer(block)}</td>`
+          `<td nowrap="nowrap" style="min-width:64px;text-align:center;white-space:nowrap;padding:2px 5px;border:0;vertical-align:middle;${extraStyle}">${renderer(block)}</td>`
         ).join("");
       return `<table cellpadding="0" cellspacing="0" border="0" style="border:0;border-collapse:collapse;table-layout:auto;margin:8px 0 12px 0;">
         <tbody>
-          <tr>${cells((block) => `<span style="font-size:12pt;font-weight:600;white-space:nowrap;">${noWrap(block.thai || "0")}</span>`, "height:34px;")}</tr>
-          <tr>${cells((block) => block.thai ? '<span style="font-size:12pt;color:#d97706;">↑</span>' : "", "height:20px;padding-top:1px;padding-bottom:1px;")}</tr>
-          <tr>${cells((block) => `<strong style="font-size:18pt;white-space:nowrap;">${noWrap(block.hanzi)}</strong>`, "height:36px;")}</tr>
-          <tr>${cells((block) => block.pinyin ? '<span style="font-size:11pt;color:#94a3b8;">↑</span>' : "", "height:20px;padding-top:1px;padding-bottom:1px;")}</tr>
-          <tr>${cells((block) => `<span style="font-size:11pt;color:#475569;white-space:nowrap;">${noWrap(block.pinyin)}</span>`, "height:34px;")}</tr>
+          <tr>${cells((block) => `<span style="font-size:9pt;font-weight:600;white-space:nowrap;">${noWrap(block.thai || "0")}</span>`, "height:26px;")}</tr>
+          <tr>${cells((block) => block.thai ? '<span style="font-size:9pt;color:#d97706;">↑</span>' : "", "height:14px;padding-top:0;padding-bottom:0;")}</tr>
+          <tr>${cells((block) => `<strong style="font-size:14pt;white-space:nowrap;">${noWrap(block.hanzi)}</strong>`, "height:28px;")}</tr>
+          <tr>${cells((block) => block.pinyin ? '<span style="font-size:8pt;color:#94a3b8;">↑</span>' : "", "height:14px;padding-top:0;padding-bottom:0;")}</tr>
+          <tr>${cells((block) => `<span style="font-size:8.5pt;color:#475569;white-space:nowrap;">${noWrap(block.pinyin)}</span>`, "height:25px;")}</tr>
         </tbody>
       </table>`;
     }).join("");
