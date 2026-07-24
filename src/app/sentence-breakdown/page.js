@@ -379,6 +379,7 @@ export default function SentenceBreakdown() {
             rows.push(new TableRow({ children: item.blocks.map(b => new TableCell({ children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.showTopArrow ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })], borders: noBorders, verticalAlign: VerticalAlign.BOTTOM })) }));
           }
           rows.push(new TableRow({ children: item.blocks.map(b => new TableCell({ children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.thai || "", size: 24 })], alignment: AlignmentType.CENTER })], borders: noBorders, verticalAlign: VerticalAlign.BOTTOM })) }));
+          rows.push(new TableRow({ children: item.blocks.map(b => new TableCell({ children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.thai ? "↑" : "", size: 24, color: "94A3B8" })], alignment: AlignmentType.CENTER })], borders: noBorders, verticalAlign: VerticalAlign.CENTER })) }));
           rows.push(new TableRow({ children: item.blocks.map(b => new TableCell({ children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.hanzi || "", size: 36, bold: true })], alignment: AlignmentType.CENTER })], borders: noBorders, verticalAlign: VerticalAlign.CENTER })) }));
           rows.push(new TableRow({ children: item.blocks.map(b => new TableCell({ children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.pinyin ? "↑" : "", size: 24 })], alignment: AlignmentType.CENTER })], borders: noBorders, verticalAlign: VerticalAlign.TOP })) }));
           rows.push(new TableRow({ children: item.blocks.map(b => new TableCell({ children: [new Paragraph({ children: [new TextRun({ font: "Sarabun", text: b.pinyin || "", size: 24 })], alignment: AlignmentType.CENTER })], borders: noBorders, verticalAlign: VerticalAlign.TOP })) }));
@@ -458,6 +459,7 @@ export default function SentenceBreakdown() {
             <p className="text-xs text-slate-500 mb-4 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
               ใส่เฉพาะประโยคภาษาจีน <b className="text-indigo-700">หนึ่งประโยคต่อหนึ่งบรรทัด</b>
               ระบบจะแยกคำ สร้างพินอิน และแปลไทย–อังกฤษให้อัตโนมัติ
+              คำช่วยที่ไม่มีความหมายตรงตัวจะแสดงเป็น <b className="text-indigo-700">0</b>
             </p>
             <textarea
               value={quickInput}
@@ -611,6 +613,7 @@ export default function SentenceBreakdown() {
                               {block.showTopArrow && <span className="text-xl mt-1 text-slate-400">↑</span>}
                             </div>
                             <div className="text-xl h-8 flex items-center font-medium text-slate-700">{block.thai}</div>
+                            {block.thai && <div className="text-lg leading-none text-amber-500" aria-hidden="true">↑</div>}
                             <div className="text-3xl font-bold mt-1 mb-1 text-slate-900">{block.hanzi}</div>
                             {block.pinyin && <div className="text-lg text-slate-400">↑</div>}
                             <div className="text-xl font-medium text-slate-600">{block.pinyin}</div>

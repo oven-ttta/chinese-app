@@ -3,11 +3,14 @@ import { NextResponse } from "next/server";
 const MAX_SENTENCES = 20;
 const MAX_SENTENCE_LENGTH = 500;
 const LEARNING_BOUNDARY_CHARS = new Set(
-  Array.from("我你他她它爱好很是的有在不吗呢吧了去来想要会能给")
+  Array.from("我你他她它爱好很是的地得有在不没吗呢吧啊呀嘛么了着过去来想要会能给把被和也都")
 );
 const PRESERVED_WORDS = new Set([
   "没有", "我们", "你们", "他们", "她们", "它们", "喜欢", "可以", "因为",
   "所以", "但是", "还是", "已经", "正在", "知道", "觉得"
+]);
+const NO_DIRECT_MEANING_WORDS = new Set([
+  "的", "地", "得", "了", "着", "过", "吗", "呢", "吧", "啊", "呀", "嘛", "么"
 ]);
 
 const translate = async (text, to, includeRomanization = false) => {
@@ -48,18 +51,25 @@ const segmentChinese = (sentence) => {
     .filter((part) => part.isWordLike && /[\p{Script=Han}]/u.test(part.segment))
     .flatMap((part) => {
       const word = part.segment;
-      const characters = Array.from(word);
-      const boundaryCount = characters.filter((character) =>
-        LEARNING_BOUNDARY_CHARS.has(character)
-      ).length;
-      if (
-        characters.length <= 3 &&
-        boundaryCount >= 2 &&
-        !PRESERVED_WORDS.has(word)
-      ) {
-        return characters;
-      }
-      return word;
+      if (PRESERVED_WORDS.has(word)) return word;
+
+      const refined = [];
+      let lexicalBuffer = "";
+      const flushBuffer = () => {
+        if (lexicalBuffer) refined.push(lexicalBuffer);
+        lexicalBuffer = "";
+      };
+
+      Array.from(word).forEach((character) => {
+        if (LEARNING_BOUNDARY_CHARS.has(character)) {
+          flushBuffer();
+          refined.push(character);
+        } else {
+          lexicalBuffer += character;
+        }
+      });
+      flushBuffer();
+      return refined;
     });
 };
 
@@ -73,10 +83,14 @@ const analyzeSentence = async (sentence) => {
     Promise.all(
       words.map(async (word) => {
         const result = await translate(word, "th", true);
+        const hasDirectMeaning =
+          !NO_DIRECT_MEANING_WORDS.has(word) &&
+          result.translatedText &&
+          result.translatedText !== word;
         return {
           hanzi: word,
           pinyin: result.pinyin,
-          thai: result.translatedText,
+          thai: hasDirectMeaning ? result.translatedText : "0",
           topNote: "",
           showTopArrow: false
         };
