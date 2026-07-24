@@ -106,7 +106,12 @@ export default function SentenceBreakdown() {
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch (error) {
+      console.error("Failed to save sentence breakdown", error);
+      setNotice("งานมีขนาดใหญ่เกินพื้นที่บันทึกอัตโนมัติ กรุณาสำรองเป็นไฟล์โปรเจกต์");
+    }
   }, [items, isHydrated]);
 
   useEffect(() => () => {
@@ -122,6 +127,7 @@ export default function SentenceBreakdown() {
   // --- Quick Generate ---
   const [quickInput, setQuickInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState("");
 
   const handleQuickGenerate = async () => {
     const sentences = quickInput
@@ -134,21 +140,29 @@ export default function SentenceBreakdown() {
     }
 
     setIsAnalyzing(true);
+    setAnalysisProgress(`0/${sentences.length}`);
     try {
-      const response = await fetch("/api/sentence-breakdown", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sentences })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "วิเคราะห์ประโยคไม่สำเร็จ");
+      const results = [];
+      const batchSize = 10;
+      for (let index = 0; index < sentences.length; index += batchSize) {
+        const batch = sentences.slice(index, index + batchSize);
+        const response = await fetch("/api/sentence-breakdown", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sentences: batch })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "วิเคราะห์ประโยคไม่สำเร็จ");
+        results.push(...data.results);
+        setAnalysisProgress(`${Math.min(index + batch.length, sentences.length)}/${sentences.length}`);
+      }
 
       const hasOnlyEmptyItem =
         items.length === 1 &&
         items[0].blocks.length === 0 &&
         !items[0].sentence.hanzi;
       const startingIndex = hasOnlyEmptyItem ? 1 : items.length + 1;
-      const newItems = data.results.map((result, index) => ({
+      const newItems = results.map((result, index) => ({
         id: createId(),
         sentence: {
           index: `${startingIndex + index}.`,
@@ -168,6 +182,7 @@ export default function SentenceBreakdown() {
       setNotice(error.message || "วิเคราะห์ประโยคไม่สำเร็จ");
     } finally {
       setIsAnalyzing(false);
+      setAnalysisProgress("");
     }
   };
 
@@ -459,7 +474,7 @@ export default function SentenceBreakdown() {
             <p className="text-xs text-slate-500 mb-4 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
               ใส่เฉพาะประโยคภาษาจีน <b className="text-indigo-700">หนึ่งประโยคต่อหนึ่งบรรทัด</b>
               ระบบจะแยกคำ สร้างพินอิน และแปลไทย–อังกฤษให้อัตโนมัติ
-              คำช่วยที่ไม่มีความหมายตรงตัวจะแสดงเป็น <b className="text-indigo-700">0</b>
+              รองรับไม่จำกัดจำนวนบรรทัด และคำช่วยที่ไม่มีความหมายตรงตัวจะแสดงเป็น <b className="text-indigo-700">0</b>
             </p>
             <textarea
               value={quickInput}
@@ -473,7 +488,7 @@ export default function SentenceBreakdown() {
               disabled={isAnalyzing || !quickInput.trim()}
               className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-xl transition-all shadow-md shadow-indigo-200 active:scale-[0.98] flex justify-center items-center gap-2 text-sm"
             >
-              <ZapIcon /> {isAnalyzing ? "กำลังแยกคำและแปล…" : "วิเคราะห์และสร้างอัตโนมัติ"}
+              <ZapIcon /> {isAnalyzing ? `กำลังวิเคราะห์ ${analysisProgress}` : "วิเคราะห์และสร้างอัตโนมัติ"}
             </button>
           </div>
           

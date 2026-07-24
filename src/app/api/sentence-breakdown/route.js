@@ -13,6 +13,24 @@ const NO_DIRECT_MEANING_WORDS = new Set([
   "的", "地", "得", "了", "着", "过", "吗", "呢", "吧", "啊", "呀", "嘛", "么"
 ]);
 
+const mapWithConcurrency = async (values, limit, mapper) => {
+  const results = new Array(values.length);
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (nextIndex < values.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(values[index], index);
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, values.length) }, () => worker())
+  );
+  return results;
+};
+
 const translate = async (text, to, includeRomanization = false) => {
   const params = new URLSearchParams({
     client: "gtx",
@@ -80,8 +98,10 @@ const analyzeSentence = async (sentence) => {
   const [thaiSentence, englishSentence, wordDetails] = await Promise.all([
     translate(sentence, "th", true),
     translate(sentence, "en"),
-    Promise.all(
-      words.map(async (word) => {
+    mapWithConcurrency(
+      words,
+      6,
+      async (word) => {
         const result = await translate(word, "th", true);
         const hasDirectMeaning =
           !NO_DIRECT_MEANING_WORDS.has(word) &&
@@ -94,7 +114,7 @@ const analyzeSentence = async (sentence) => {
           topNote: "",
           showTopArrow: false
         };
-      })
+      }
     )
   ]);
 
@@ -136,7 +156,7 @@ export async function POST(request) {
       );
     }
 
-    const results = await Promise.all(sentences.map(analyzeSentence));
+    const results = await mapWithConcurrency(sentences, 2, analyzeSentence);
     return NextResponse.json({ results });
   } catch (error) {
     console.error("Sentence breakdown error:", error);
