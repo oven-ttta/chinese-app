@@ -20,29 +20,29 @@ const SpeakerIcon = () => (
 );
 
 const initials = [
-  { id: "b", char: "b", label: "ปอ", speech: "波", color: "amber" },
-  { id: "p", char: "p", label: "พอ", speech: "坡", color: "amber" },
-  { id: "m", char: "m", label: "มอ", speech: "摸", color: "amber" },
-  { id: "f", char: "f", label: "ฟอ", speech: "佛", color: "amber" },
-  { id: "d", char: "d", label: "เตอ", speech: "嘚", color: "red" },
-  { id: "t", char: "t", label: "เทอ", speech: "忒", color: "red" },
-  { id: "n", char: "n", label: "เนอ", speech: "呢", color: "red" },
-  { id: "l", char: "l", label: "เลอ", speech: "嘞", color: "red" },
-  { id: "g", char: "g", label: "เกอ", speech: "哥", color: "orange" },
-  { id: "k", char: "k", label: "เคอ", speech: "科", color: "orange" },
-  { id: "h", char: "h", label: "เฮอ", speech: "喝", color: "orange" },
-  { id: "j", char: "j", label: "จี", speech: "鸡", color: "emerald" },
-  { id: "q", char: "q", label: "ชี", speech: "七", color: "emerald" },
-  { id: "x", char: "x", label: "ซี", speech: "西", color: "emerald" },
-  { id: "zh", char: "zh", label: "จือ", speech: "知", color: "blue" },
-  { id: "ch", char: "ch", label: "ชือ", speech: "吃", color: "blue" },
-  { id: "sh", char: "sh", label: "ซือ", speech: "诗", color: "blue" },
-  { id: "r", char: "r", label: "ยือ", speech: "日", color: "blue" },
-  { id: "z", char: "z", label: "จือ", speech: "资", color: "purple" },
-  { id: "c", char: "c", label: "ชือ", speech: "呲", color: "purple" },
-  { id: "s", char: "s", label: "ซือ", speech: "思", color: "purple" },
-  { id: "y", char: "y", label: "อี", speech: "衣", color: "pink" },
-  { id: "w", char: "w", label: "อู", speech: "乌", color: "pink" },
+  { id: "b", char: "b", label: "ปอ", speech: "波", audio: "bo1", color: "amber" },
+  { id: "p", char: "p", label: "พอ", speech: "坡", audio: "po1", color: "amber" },
+  { id: "m", char: "m", label: "มอ", speech: "摸", audio: "mo1", color: "amber" },
+  { id: "f", char: "f", label: "ฟอ", speech: "佛", audio: "fo1", color: "amber" },
+  { id: "d", char: "d", label: "เตอ", speech: "嘚", audio: "de1", color: "red" },
+  { id: "t", char: "t", label: "เทอ", speech: "忒", audio: "te1", color: "red" },
+  { id: "n", char: "n", label: "เนอ", speech: "呢", audio: "ne1", color: "red" },
+  { id: "l", char: "l", label: "เลอ", speech: "嘞", audio: "le1", color: "red" },
+  { id: "g", char: "g", label: "เกอ", speech: "哥", audio: "ge1", color: "orange" },
+  { id: "k", char: "k", label: "เคอ", speech: "科", audio: "ke1", color: "orange" },
+  { id: "h", char: "h", label: "เฮอ", speech: "喝", audio: "he1", color: "orange" },
+  { id: "j", char: "j", label: "จี", speech: "鸡", audio: "ji1", color: "emerald" },
+  { id: "q", char: "q", label: "ชี", speech: "七", audio: "qi1", color: "emerald" },
+  { id: "x", char: "x", label: "ซี", speech: "西", audio: "xi1", color: "emerald" },
+  { id: "zh", char: "zh", label: "จือ", speech: "知", audio: "zhi1", color: "blue" },
+  { id: "ch", char: "ch", label: "ชือ", speech: "吃", audio: "chi1", color: "blue" },
+  { id: "sh", char: "sh", label: "ซือ", speech: "诗", audio: "shi1", color: "blue" },
+  { id: "r", char: "r", label: "ยือ", speech: "日", audio: "ri1", color: "blue" },
+  { id: "z", char: "z", label: "จือ", speech: "资", audio: "zi1", color: "purple" },
+  { id: "c", char: "c", label: "ชือ", speech: "呲", audio: "ci1", color: "purple" },
+  { id: "s", char: "s", label: "ซือ", speech: "思", audio: "si1", color: "purple" },
+  { id: "y", char: "y", label: "อี", speech: "衣", audio: "yi1", color: "pink" },
+  { id: "w", char: "w", label: "อู", speech: "乌", audio: "wu1", color: "pink" },
 ];
 
 const vowels = [
@@ -127,12 +127,15 @@ export default function PinyinPage() {
     window.speechSynthesis.speak(utterance);
   };
 
-  const speakChinese = (text, id) => {
+  const speakChinese = (text, id, audioName) => {
     audioRef.current?.pause();
     window.speechSynthesis?.cancel();
     setActiveId(id);
 
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=zh-CN`);
+    const audioUrl = audioName
+      ? `/audio/pinyin-initials/${audioName}.mp3`
+      : `/api/tts?text=${encodeURIComponent(text)}&lang=zh-CN`;
+    const audio = new Audio(audioUrl);
     audioRef.current = audio;
     audio.onended = () => setActiveId(null);
     audio.onerror = () => speakChineseFallback(text, id);
@@ -148,7 +151,7 @@ export default function PinyinPage() {
           label={item.label}
           colorClass={item.color}
           isActive={activeId === item.id}
-          onPlay={() => speakChinese(item.speech, item.id)}
+          onPlay={() => speakChinese(item.speech, item.id, item.audio)}
         />
       ))}
     </div>
