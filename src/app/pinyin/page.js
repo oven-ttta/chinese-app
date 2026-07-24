@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import PinyinCard from "@/components/PinyinCard";
 
+const INITIAL_VOICE_STORAGE_KEY = "pinyin-initial-voice";
+const initialVoices = [
+  { id: "clear", label: "เสียงใส", description: "ชัด ไม่มีเสียงพื้นหลัง" },
+  { id: "native", label: "เสียงธรรมชาติ", description: "เสียงบันทึกเจ้าของภาษา" },
+];
+
 const BackIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="19" y1="12" x2="5" y2="12" />
@@ -102,12 +108,28 @@ const tones = [
 
 export default function PinyinPage() {
   const [activeId, setActiveId] = useState(null);
+  const [initialVoice, setInitialVoice] = useState("clear");
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    const savedVoice = localStorage.getItem(INITIAL_VOICE_STORAGE_KEY);
+    if (initialVoices.some((voice) => voice.id === savedVoice)) {
+      setInitialVoice(savedVoice);
+    }
+  }, []);
 
   useEffect(() => () => {
     audioRef.current?.pause();
     window.speechSynthesis?.cancel();
   }, []);
+
+  const selectInitialVoice = (voiceId) => {
+    audioRef.current?.pause();
+    window.speechSynthesis?.cancel();
+    setActiveId(null);
+    setInitialVoice(voiceId);
+    localStorage.setItem(INITIAL_VOICE_STORAGE_KEY, voiceId);
+  };
 
   const speakChineseFallback = (text, id) => {
     if (!window.speechSynthesis) {
@@ -132,8 +154,9 @@ export default function PinyinPage() {
     window.speechSynthesis?.cancel();
     setActiveId(id);
 
+    const voiceFolder = initialVoice === "native" ? "native/" : "";
     const audioUrl = audioName
-      ? `/audio/pinyin-initials/${audioName}.mp3`
+      ? `/audio/pinyin-initials/${voiceFolder}${audioName}.mp3`
       : `/api/tts?text=${encodeURIComponent(text)}&lang=zh-CN`;
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
@@ -176,9 +199,33 @@ export default function PinyinPage() {
         </div>
 
         <section className="mb-10 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-2 h-8 bg-amber-400 rounded-full" />
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800">พยัญชนะ <span className="text-slate-400 text-sm sm:text-base font-medium ml-1">(Initials)</span></h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-8 bg-amber-400 rounded-full" />
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800">พยัญชนะ <span className="text-slate-400 text-sm sm:text-base font-medium ml-1">(Initials)</span></h2>
+            </div>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="เลือกชุดเสียงพยัญชนะ">
+              {initialVoices.map((voice) => {
+                const selected = initialVoice === voice.id;
+                return (
+                  <button
+                    type="button"
+                    key={voice.id}
+                    onClick={() => selectInitialVoice(voice.id)}
+                    aria-pressed={selected}
+                    title={voice.description}
+                    className={`rounded-xl border px-3 py-2 text-left transition-all ${
+                      selected
+                        ? "border-amber-400 bg-amber-50 text-amber-900 shadow-sm"
+                        : "border-slate-200 bg-slate-50 text-slate-600 hover:border-amber-300 hover:bg-amber-50/60"
+                    }`}
+                  >
+                    <span className="block text-xs font-bold">{voice.label}</span>
+                    <span className="hidden md:block text-[10px] mt-0.5 opacity-70">{voice.description}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           {renderPinyinCards(initials, "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4 md:gap-5")}
         </section>

@@ -1,7 +1,7 @@
 # Mandarin pinyin audio
 
-The MP3 files in this directory are from
-[audio-cmn](https://github.com/hugolpz/audio-cmn), a Mandarin Chinese audio
-dataset coordinated by Hugo Lopez. The syllable recordings are by Chen Wang.
+Source: [Mandarin Portal — Mandarin Chinese Pinyin Audio List](https://mandarinportal.com/mandarin-chinese-pinyin-audio-list/)
 
-License: [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/)
+The alternate files in `native/` are from
+[audio-cmn](https://github.com/hugolpz/audio-cmn). The syllable recordings are
+by Chen Wang and distributed under CC BY-SA.
