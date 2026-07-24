@@ -121,54 +121,53 @@ export default function SentenceBreakdown() {
 
   // --- Quick Generate ---
   const [quickInput, setQuickInput] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const handleQuickGenerate = () => {
-    const rawBlocks = quickInput.trim().split(/\r?\n\s*\r?\n/);
-    const newItems = [];
-    
-    rawBlocks.forEach((rawBlock, i) => {
-      const lines = rawBlock.split('\n').map(line => line.trim()).filter(Boolean);
-      if (lines.length === 0) return;
+  const handleQuickGenerate = async () => {
+    const sentences = quickInput
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (sentences.length === 0) {
+      setNotice("กรุณาใส่ประโยคภาษาจีนอย่างน้อย 1 ประโยค");
+      return;
+    }
 
-      const newHanzi = lines[0] || "";
-      const newPinyin = lines[1] || "";
-      const newThai = lines[2] || "";
-      const newEnglish = lines[3] || "";
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch("/api/sentence-breakdown", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sentences })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "วิเคราะห์ประโยคไม่สำเร็จ");
 
-      const explicitHanziWords = newHanzi.trim().split(/\s+/).filter(Boolean);
-      const hanziChars = explicitHanziWords.length > 1
-        ? explicitHanziWords
-        : Array.from(newHanzi).filter(char => !/[\s。，、；：？！,.!?;:]/.test(char));
-      const pinyinWords = newPinyin.split(/\s+/).map(p => p.replace(/[。，？！,.?!]/g, '')).filter(Boolean);
-      const thaiWords = newThai.includes(' ') ? newThai.split(/\s+/).filter(Boolean) : [];
-
-      const blocks = hanziChars.map((char, index) => createBlock({
-        hanzi: char,
-        pinyin: pinyinWords[index] || "",
-        thai: thaiWords[index] || ""
+      const hasOnlyEmptyItem =
+        items.length === 1 &&
+        items[0].blocks.length === 0 &&
+        !items[0].sentence.hanzi;
+      const startingIndex = hasOnlyEmptyItem ? 1 : items.length + 1;
+      const newItems = data.results.map((result, index) => ({
+        id: createId(),
+        sentence: {
+          index: `${startingIndex + index}.`,
+          hanzi: result.hanzi,
+          pinyin: result.pinyin,
+          thai: result.thai,
+          english: result.english
+        },
+        blocks: result.blocks.map((block) => createBlock(block))
       }));
 
-      newItems.push({
-        id: createId(),
-        sentence: { 
-          index: `${items.length === 1 && items[0].blocks.length === 0 && !items[0].sentence.hanzi ? 1 + i : items.length + i + 1}.`, 
-          hanzi: newHanzi, 
-          pinyin: newPinyin, 
-          thai: newThai, 
-          english: newEnglish 
-        },
-        blocks
-      });
-    });
-
-    if (newItems.length > 0) {
-      if (items.length === 1 && items[0].blocks.length === 0 && !items[0].sentence.hanzi) {
-        setItems(newItems);
-      } else {
-        setItems(prev => [...prev, ...newItems]);
-      }
+      setItems((current) => hasOnlyEmptyItem ? newItems : [...current, ...newItems]);
       setQuickInput("");
-      setNotice(`สร้าง ${newItems.length} ประโยคเรียบร้อย`);
+      setNotice(`วิเคราะห์และสร้าง ${newItems.length} ประโยคเรียบร้อย`);
+    } catch (error) {
+      console.error("Failed to analyze sentences", error);
+      setNotice(error.message || "วิเคราะห์ประโยคไม่สำเร็จ");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -454,25 +453,25 @@ export default function SentenceBreakdown() {
           {/* Quick Input Section */}
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h2 className="text-sm font-bold text-indigo-700 flex items-center gap-2 mb-2">
-              <ZapIcon /> สร้างอัตโนมัติจากข้อความ (รองรับหลายข้อ)
+              <ZapIcon /> สร้างอัตโนมัติจากประโยคจีน
             </h2>
             <p className="text-xs text-slate-500 mb-4 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
-              วางข้อความเรียงตามบรรทัด หากต้องการสร้างหลายข้อให้ <b className="text-indigo-700">เว้นบรรทัดว่าง 1 บรรทัด</b> ระหว่างข้อ<br/>
-              <span className="inline-block mt-1">
-                <b>1:</b> จีน | <b>2:</b> พินอิน | <b>3:</b> ไทย | <b>4:</b> อังกฤษ (ไม่บังคับ)
-              </span>
+              ใส่เฉพาะประโยคภาษาจีน <b className="text-indigo-700">หนึ่งประโยคต่อหนึ่งบรรทัด</b>
+              ระบบจะแยกคำ สร้างพินอิน และแปลไทย–อังกฤษให้อัตโนมัติ
             </p>
             <textarea
               value={quickInput}
               onChange={(e) => setQuickInput(e.target.value)}
-              placeholder="我爱你。&#10;wǒ ài nǐ.&#10;ฉัน รัก คุณ&#10;I love you.&#10;&#10;很高兴认识你。&#10;Hěn gāoxìng rènshi nǐ.&#10;ยินดี ที่ได้ รู้จัก คุณ"
+              placeholder="我爱你。&#10;很高兴认识你。&#10;今天天气很好。"
+              disabled={isAnalyzing}
               className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all min-h-[160px] text-sm outline-none resize-y mb-3"
             />
             <button
               onClick={handleQuickGenerate}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-all shadow-md shadow-indigo-200 active:scale-[0.98] flex justify-center items-center gap-2 text-sm"
+              disabled={isAnalyzing || !quickInput.trim()}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-xl transition-all shadow-md shadow-indigo-200 active:scale-[0.98] flex justify-center items-center gap-2 text-sm"
             >
-              <ZapIcon /> แยกลงช่องอัตโนมัติ
+              <ZapIcon /> {isAnalyzing ? "กำลังแยกคำและแปล…" : "วิเคราะห์และสร้างอัตโนมัติ"}
             </button>
           </div>
           
