@@ -52,7 +52,9 @@ const escapeHtml = (value = "") =>
     .replaceAll("'", "&#039;");
 
 const buildGoogleDocsContent = (items) => {
-  const WORDS_PER_ROW = 6;
+  const WORDS_PER_ROW = 4;
+  const noWrap = (value = "") =>
+    escapeHtml(value).replaceAll(" ", "&nbsp;");
   const chunkBlocks = (blocks) => {
     const chunks = [];
     for (let index = 0; index < blocks.length; index += WORDS_PER_ROW) {
@@ -65,17 +67,15 @@ const buildGoogleDocsContent = (items) => {
     const tables = chunkBlocks(item.blocks).map((chunk) => {
       const cells = (renderer, extraStyle = "") =>
         chunk.map((block) =>
-          `<td width="96" style="width:96px;text-align:center;padding:4px 5px;border:1px solid #e2e8f0;vertical-align:middle;${extraStyle}">${renderer(block)}</td>`
+          `<td nowrap="nowrap" style="min-width:110px;text-align:center;white-space:nowrap;padding:4px 10px;border:0;vertical-align:middle;${extraStyle}">${renderer(block)}</td>`
         ).join("");
-      const columns = chunk.map(() => '<col width="96" style="width:96px;">').join("");
-      return `<table width="${chunk.length * 96}" cellpadding="0" cellspacing="0" style="width:${chunk.length * 96}px;border-collapse:collapse;table-layout:fixed;margin:8px 0 12px 0;">
-        <colgroup>${columns}</colgroup>
+      return `<table cellpadding="0" cellspacing="0" border="0" style="border:0;border-collapse:collapse;table-layout:auto;margin:8px 0 12px 0;">
         <tbody>
-          <tr>${cells((block) => `<span style="font-size:12pt;font-weight:600;">${escapeHtml(block.thai || "0")}</span>`, "height:42px;")}</tr>
+          <tr>${cells((block) => `<span style="font-size:12pt;font-weight:600;white-space:nowrap;">${noWrap(block.thai || "0")}</span>`, "height:34px;")}</tr>
           <tr>${cells((block) => block.thai ? '<span style="font-size:12pt;color:#d97706;">↑</span>' : "", "height:20px;padding-top:1px;padding-bottom:1px;")}</tr>
-          <tr>${cells((block) => `<strong style="font-size:18pt;">${escapeHtml(block.hanzi)}</strong>`, "height:36px;")}</tr>
+          <tr>${cells((block) => `<strong style="font-size:18pt;white-space:nowrap;">${noWrap(block.hanzi)}</strong>`, "height:36px;")}</tr>
           <tr>${cells((block) => block.pinyin ? '<span style="font-size:11pt;color:#94a3b8;">↑</span>' : "", "height:20px;padding-top:1px;padding-bottom:1px;")}</tr>
-          <tr>${cells((block) => `<span style="font-size:11pt;color:#475569;">${escapeHtml(block.pinyin)}</span>`, "height:34px;")}</tr>
+          <tr>${cells((block) => `<span style="font-size:11pt;color:#475569;white-space:nowrap;">${noWrap(block.pinyin)}</span>`, "height:34px;")}</tr>
         </tbody>
       </table>`;
     }).join("");
