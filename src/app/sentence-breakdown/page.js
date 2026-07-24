@@ -52,38 +52,53 @@ const escapeHtml = (value = "") =>
     .replaceAll("'", "&#039;");
 
 const buildGoogleDocsContent = (items) => {
-  const htmlItems = items.map((item) => {
-    const blockCells = (renderer) =>
-      item.blocks.map((block) =>
-        `<td style="text-align:center;padding:3px 8px;border:0;vertical-align:middle;">${renderer(block)}</td>`
-      ).join("");
-    const table = item.blocks.length > 0
-      ? `<table style="border-collapse:collapse;margin:8px 0 14px 0;">
-          <tbody>
-            <tr>${blockCells((block) => `<span style="font-size:13pt;">${escapeHtml(block.thai || "0")}</span>`)}</tr>
-            <tr>${blockCells((block) => block.thai ? '<span style="color:#d97706;">↑</span>' : "")}</tr>
-            <tr>${blockCells((block) => `<strong style="font-size:19pt;">${escapeHtml(block.hanzi)}</strong>`)}</tr>
-            <tr>${blockCells((block) => block.pinyin ? '<span style="color:#94a3b8;">↑</span>' : "")}</tr>
-            <tr>${blockCells((block) => `<span style="font-size:12pt;color:#475569;">${escapeHtml(block.pinyin)}</span>`)}</tr>
-          </tbody>
-        </table>`
-      : "";
+  const WORDS_PER_ROW = 6;
+  const chunkBlocks = (blocks) => {
+    const chunks = [];
+    for (let index = 0; index < blocks.length; index += WORDS_PER_ROW) {
+      chunks.push(blocks.slice(index, index + WORDS_PER_ROW));
+    }
+    return chunks;
+  };
 
-    return `<section style="margin:0 0 28px 0;font-family:Arial,'Noto Sans SC',sans-serif;">
-      <p style="font-size:16pt;font-weight:700;margin:0 0 6px 0;">${escapeHtml(item.sentence.index)}</p>
-      ${table}
+  const htmlItems = items.map((item) => {
+    const tables = chunkBlocks(item.blocks).map((chunk) => {
+      const cells = (renderer, extraStyle = "") =>
+        chunk.map((block) =>
+          `<td width="96" style="width:96px;text-align:center;padding:4px 5px;border:1px solid #e2e8f0;vertical-align:middle;${extraStyle}">${renderer(block)}</td>`
+        ).join("");
+      const columns = chunk.map(() => '<col width="96" style="width:96px;">').join("");
+      return `<table width="${chunk.length * 96}" cellpadding="0" cellspacing="0" style="width:${chunk.length * 96}px;border-collapse:collapse;table-layout:fixed;margin:8px 0 12px 0;">
+        <colgroup>${columns}</colgroup>
+        <tbody>
+          <tr>${cells((block) => `<span style="font-size:12pt;font-weight:600;">${escapeHtml(block.thai || "0")}</span>`, "height:42px;")}</tr>
+          <tr>${cells((block) => block.thai ? '<span style="font-size:12pt;color:#d97706;">↑</span>' : "", "height:20px;padding-top:1px;padding-bottom:1px;")}</tr>
+          <tr>${cells((block) => `<strong style="font-size:18pt;">${escapeHtml(block.hanzi)}</strong>`, "height:36px;")}</tr>
+          <tr>${cells((block) => block.pinyin ? '<span style="font-size:11pt;color:#94a3b8;">↑</span>' : "", "height:20px;padding-top:1px;padding-bottom:1px;")}</tr>
+          <tr>${cells((block) => `<span style="font-size:11pt;color:#475569;">${escapeHtml(block.pinyin)}</span>`, "height:34px;")}</tr>
+        </tbody>
+      </table>`;
+    }).join("");
+
+    return `<div style="margin:0 0 30px 0;font-family:Arial,'Noto Sans Thai','Noto Sans SC',sans-serif;page-break-inside:avoid;">
+      <p style="font-size:15pt;font-weight:700;margin:0 0 8px 0;">${escapeHtml(item.sentence.index)}</p>
+      ${tables}
       ${item.sentence.hanzi ? `<p style="font-size:15pt;font-weight:700;margin:3px 0;">${escapeHtml(item.sentence.hanzi)}</p>` : ""}
       ${item.sentence.pinyin ? `<p style="font-size:12pt;margin:3px 0;color:#475569;">${escapeHtml(item.sentence.pinyin)}</p>` : ""}
       ${item.sentence.english ? `<p style="font-size:12pt;margin:3px 0;">${escapeHtml(item.sentence.english)}</p>` : ""}
       ${item.sentence.thai ? `<p style="font-size:12pt;font-weight:600;margin:8px 0 3px 0;">${escapeHtml(item.sentence.thai)}</p>` : ""}
-    </section>`;
+    </div>`;
   }).join("");
 
   const html = `<div>${htmlItems}</div>`;
   const text = items.map((item) => {
-    const words = item.blocks.map((block) =>
-      `${block.thai || "0"}\n↑\n${block.hanzi}\n↑\n${block.pinyin}`
-    ).join("\t");
+    const words = chunkBlocks(item.blocks).map((chunk) => [
+      chunk.map((block) => block.thai || "0").join("\t"),
+      chunk.map(() => "↑").join("\t"),
+      chunk.map((block) => block.hanzi).join("\t"),
+      chunk.map((block) => block.pinyin ? "↑" : "").join("\t"),
+      chunk.map((block) => block.pinyin).join("\t")
+    ].join("\n")).join("\n\n");
     return [
       item.sentence.index,
       words,
