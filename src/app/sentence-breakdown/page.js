@@ -1,7 +1,47 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import html2canvas from "html2canvas";
+
+const STORAGE_KEY = "chinese-app:sentence-breakdown:v1";
+
+const createId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const createEmptyItem = (index = 1) => ({
+  id: createId(),
+  sentence: { index: `${index}.`, hanzi: "", pinyin: "", english: "", thai: "" },
+  blocks: []
+});
+
+const createBlock = (values = {}) => ({
+  id: createId(),
+  thai: "",
+  hanzi: "",
+  pinyin: "",
+  topNote: "",
+  showTopArrow: false,
+  ...values
+});
+
+const normalizeItems = (value) => {
+  if (!Array.isArray(value) || value.length === 0) return [createEmptyItem()];
+  return value.map((item, index) => ({
+    id: item?.id || createId(),
+    sentence: {
+      index: item?.sentence?.index || `${index + 1}.`,
+      hanzi: item?.sentence?.hanzi || "",
+      pinyin: item?.sentence?.pinyin || "",
+      english: item?.sentence?.english || "",
+      thai: item?.sentence?.thai || ""
+    },
+    blocks: Array.isArray(item?.blocks)
+      ? item.blocks.map((block) => createBlock(block))
+      : []
+  }));
+};
 
 // --- Icons ---
 const TrashIcon = () => (
@@ -22,23 +62,68 @@ const ZapIcon = () => (
 const DownloadIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 );
+const VolumeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+);
+const CopyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+);
+
+const InputField = ({ label, value, onChange, placeholder = "", className = "" }) => (
+  <div className={className}>
+    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>
+    <input
+      type="text"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all text-sm outline-none"
+    />
+  </div>
+);
 
 export default function SentenceBreakdown() {
-  const [items, setItems] = useState([
-    {
-      id: Date.now(),
-      sentence: { index: "1.", hanzi: "", pinyin: "", english: "", thai: "" },
-      blocks: []
-    }
-  ]);
+  const [items, setItems] = useState(() => [createEmptyItem()]);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [exporting, setExporting] = useState("");
+  const [notice, setNotice] = useState("");
 
   const previewRef = useRef(null);
+  const importRef = useRef(null);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setItems(normalizeItems(JSON.parse(saved)));
+    } catch (error) {
+      console.error("Failed to restore sentence breakdown", error);
+      setNotice("ไม่สามารถกู้คืนงานที่บันทึกไว้ได้");
+    } finally {
+      setIsHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }, [items, isHydrated]);
+
+  useEffect(() => () => {
+    audioRef.current?.pause();
+  }, []);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timeout = setTimeout(() => setNotice(""), 3000);
+    return () => clearTimeout(timeout);
+  }, [notice]);
 
   // --- Quick Generate ---
   const [quickInput, setQuickInput] = useState("");
 
   const handleQuickGenerate = () => {
-    const rawBlocks = quickInput.split(/\n\s*\n/);
+    const rawBlocks = quickInput.trim().split(/\r?\n\s*\r?\n/);
     const newItems = [];
     
     rawBlocks.forEach((rawBlock, i) => {
@@ -50,21 +135,21 @@ export default function SentenceBreakdown() {
       const newThai = lines[2] || "";
       const newEnglish = lines[3] || "";
 
-      const hanziChars = Array.from(newHanzi).filter(char => !/[。，？！,.?!]/.test(char));
+      const explicitHanziWords = newHanzi.trim().split(/\s+/).filter(Boolean);
+      const hanziChars = explicitHanziWords.length > 1
+        ? explicitHanziWords
+        : Array.from(newHanzi).filter(char => !/[\s。，、；：？！,.!?;:]/.test(char));
       const pinyinWords = newPinyin.split(/\s+/).map(p => p.replace(/[。，？！,.?!]/g, '')).filter(Boolean);
       const thaiWords = newThai.includes(' ') ? newThai.split(/\s+/).filter(Boolean) : [];
 
-      const blocks = hanziChars.map((char, index) => ({
-        id: Date.now() + i * 1000 + index,
+      const blocks = hanziChars.map((char, index) => createBlock({
         hanzi: char,
         pinyin: pinyinWords[index] || "",
-        thai: thaiWords[index] || "",
-        topNote: "",
-        showTopArrow: false
+        thai: thaiWords[index] || ""
       }));
 
       newItems.push({
-        id: Date.now() + i,
+        id: createId(),
         sentence: { 
           index: `${items.length === 1 && items[0].blocks.length === 0 && !items[0].sentence.hanzi ? 1 + i : items.length + i + 1}.`, 
           hanzi: newHanzi, 
@@ -83,20 +168,20 @@ export default function SentenceBreakdown() {
         setItems(prev => [...prev, ...newItems]);
       }
       setQuickInput("");
+      setNotice(`สร้าง ${newItems.length} ประโยคเรียบร้อย`);
     }
   };
 
   // --- Item Management ---
   const addNewItem = () => {
-    setItems([...items, {
-      id: Date.now(),
-      sentence: { index: `${items.length + 1}.`, hanzi: "", pinyin: "", english: "", thai: "" },
-      blocks: []
-    }]);
+    setItems((current) => [...current, createEmptyItem(current.length + 1)]);
   };
 
   const removeItem = (itemId) => {
-    setItems(items.filter(item => item.id !== itemId));
+    setItems((current) => {
+      const remaining = current.filter(item => item.id !== itemId);
+      return remaining.length > 0 ? remaining : [createEmptyItem()];
+    });
   };
 
   const updateSentence = (itemId, field, value) => {
@@ -110,7 +195,7 @@ export default function SentenceBreakdown() {
   const addBlock = (itemId) => {
     setItems(items.map(item => item.id === itemId ? {
       ...item,
-      blocks: [...item.blocks, { id: Date.now(), thai: "", hanzi: "", pinyin: "", topNote: "", showTopArrow: false }]
+      blocks: [...item.blocks, createBlock()]
     } : item));
   };
 
@@ -147,11 +232,105 @@ export default function SentenceBreakdown() {
     }));
   };
 
+  const duplicateItem = (itemId) => {
+    setItems((current) => {
+      const sourceIndex = current.findIndex((item) => item.id === itemId);
+      if (sourceIndex < 0) return current;
+      const source = current[sourceIndex];
+      const duplicate = {
+        ...source,
+        id: createId(),
+        sentence: { ...source.sentence, index: `${sourceIndex + 2}.` },
+        blocks: source.blocks.map((block) => ({ ...block, id: createId() }))
+      };
+      const next = [...current];
+      next.splice(sourceIndex + 1, 0, duplicate);
+      return next;
+    });
+    setNotice("คัดลอกประโยคแล้ว");
+  };
+
+  const moveItem = (itemIndex, direction) => {
+    setItems((current) => {
+      const destination = itemIndex + direction;
+      if (destination < 0 || destination >= current.length) return current;
+      const next = [...current];
+      [next[itemIndex], next[destination]] = [next[destination], next[itemIndex]];
+      return next;
+    });
+  };
+
+  const syncSentenceFromBlocks = (itemId) => {
+    setItems((current) => current.map((item) => {
+      if (item.id !== itemId || item.blocks.length === 0) return item;
+      return {
+        ...item,
+        sentence: {
+          ...item.sentence,
+          hanzi: item.blocks.map((block) => block.hanzi).join(""),
+          pinyin: item.blocks.map((block) => block.pinyin).filter(Boolean).join(" "),
+          thai: item.blocks.map((block) => block.thai).filter(Boolean).join(" ")
+        }
+      };
+    }));
+    setNotice("อัปเดตข้อมูลประโยคจากช่องคำแล้ว");
+  };
+
+  const playSentence = (text) => {
+    if (!text) {
+      setNotice("กรุณากรอกประโยคภาษาจีนก่อน");
+      return;
+    }
+    audioRef.current?.pause();
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=zh-CN`);
+    audioRef.current = audio;
+    audio.play().catch(() => setNotice("ไม่สามารถเล่นเสียงได้"));
+  };
+
+  const exportProject = () => {
+    const blob = new Blob([JSON.stringify({ version: 1, items }, null, 2)], {
+      type: "application/json"
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `sentence_breakdown_project_${Date.now()}.json`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setNotice("ดาวน์โหลดไฟล์โปรเจกต์แล้ว");
+  };
+
+  const importProject = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      setItems(normalizeItems(parsed.items ?? parsed));
+      setNotice("นำเข้าโปรเจกต์เรียบร้อย");
+    } catch (error) {
+      console.error("Failed to import project", error);
+      setNotice("ไฟล์โปรเจกต์ไม่ถูกต้อง");
+    }
+  };
+
+  const clearProject = () => {
+    if (!window.confirm("ล้างประโยคทั้งหมดและเริ่มใหม่ใช่หรือไม่?")) return;
+    setItems([createEmptyItem()]);
+    setQuickInput("");
+    setNotice("เริ่มโปรเจกต์ใหม่แล้ว");
+  };
+
   // --- Export ---
   const downloadImage = async () => {
     if (!previewRef.current) return;
+    setExporting("image");
     try {
-      const canvas = await html2canvas(previewRef.current, { backgroundColor: "#ffffff", scale: 2 });
+      const canvas = await html2canvas(previewRef.current, {
+        backgroundColor: "#ffffff",
+        scale: Math.min(window.devicePixelRatio || 2, 2),
+        useCORS: true
+      });
       const url = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = url;
@@ -159,11 +338,14 @@ export default function SentenceBreakdown() {
       a.click();
     } catch (error) {
       console.error("Failed to generate image", error);
-      alert("Failed to generate image.");
+      setNotice("สร้างรูปภาพไม่สำเร็จ");
+    } finally {
+      setExporting("");
     }
   };
 
   const downloadDocx = async () => {
+    setExporting("docx");
     try {
       const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, VerticalAlign, TableLayoutType } = await import("docx");
 
@@ -225,25 +407,14 @@ export default function SentenceBreakdown() {
       a.href = URL.createObjectURL(buffer);
       a.download = `sentence_breakdown_${Date.now()}.docx`;
       a.click();
-      URL.revokeObjectURL(a.href);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     } catch (error) {
       console.error("Failed to generate docx", error);
-      alert("Failed to generate docx.");
+      setNotice("สร้างไฟล์ Word ไม่สำเร็จ");
+    } finally {
+      setExporting("");
     }
   };
-
-  const InputField = ({ label, value, onChange, placeholder = "", className = "" }) => (
-    <div className={className}>
-      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>
-      <input 
-        type="text" 
-        value={value} 
-        onChange={onChange} 
-        placeholder={placeholder}
-        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all text-sm outline-none" 
-      />
-    </div>
-  );
 
   return (
     <main className="flex-1 min-h-screen bg-slate-100 py-8 px-4 md:px-8 font-sans">
@@ -257,6 +428,28 @@ export default function SentenceBreakdown() {
             </div>
             <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">สร้างโครงสร้างประโยค</h1>
           </div>
+
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-2">
+            <button onClick={exportProject} className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors">
+              สำรองโปรเจกต์
+            </button>
+            <button onClick={() => importRef.current?.click()} className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors">
+              นำเข้าโปรเจกต์
+            </button>
+            <input ref={importRef} type="file" accept="application/json,.json" onChange={importProject} className="hidden" />
+            <button onClick={clearProject} className="ml-auto px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition-colors">
+              เริ่มใหม่
+            </button>
+            <p className="basis-full text-[11px] text-slate-400 px-1">
+              บันทึกอัตโนมัติในอุปกรณ์นี้ {isHydrated ? "• พร้อมใช้งาน" : "• กำลังกู้คืนข้อมูล…"}
+            </p>
+          </div>
+
+          {notice && (
+            <div role="status" className="fixed z-[60] bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-xl">
+              {notice}
+            </div>
+          )}
           
           {/* Quick Input Section */}
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -293,7 +486,11 @@ export default function SentenceBreakdown() {
                     <span className="bg-slate-100 text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">{itemIndex + 1}</span>
                     ประโยคที่ {itemIndex + 1}
                   </h2>
-                  {items.length > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => moveItem(itemIndex, -1)} disabled={itemIndex === 0} className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors disabled:opacity-25" title="ย้ายประโยคขึ้น"><ArrowUpIcon /></button>
+                    <button onClick={() => moveItem(itemIndex, 1)} disabled={itemIndex === items.length - 1} className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors disabled:opacity-25" title="ย้ายประโยคลง"><ArrowDownIcon /></button>
+                    <button onClick={() => duplicateItem(item.id)} className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors" title="คัดลอกประโยค"><CopyIcon /></button>
+                    <button onClick={() => playSentence(item.sentence.hanzi)} className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-colors" title="ฟังเสียงประโยค"><VolumeIcon /></button>
                     <button 
                       onClick={() => removeItem(item.id)}
                       className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
@@ -301,7 +498,7 @@ export default function SentenceBreakdown() {
                     >
                       <TrashIcon />
                     </button>
-                  )}
+                  </div>
                 </div>
                 
                 <div className="space-y-6">
@@ -318,12 +515,19 @@ export default function SentenceBreakdown() {
                   <div className="pt-2">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">คำศัพท์ในประโยค</h3>
-                      <button 
-                        onClick={() => addBlock(item.id)} 
-                        className="flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-100 transition-colors"
-                      >
-                        <PlusIcon /> เพิ่มคำ
-                      </button>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {item.blocks.length > 0 && (
+                          <button onClick={() => syncSentenceFromBlocks(item.id)} className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-100 transition-colors">
+                            รวมเป็นประโยค
+                          </button>
+                        )}
+                        <button
+                          onClick={() => addBlock(item.id)}
+                          className="flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-100 transition-colors"
+                        >
+                          <PlusIcon /> เพิ่มคำ
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="space-y-3">
@@ -333,12 +537,12 @@ export default function SentenceBreakdown() {
                         </div>
                       ) : item.blocks.map((block, blockIndex) => (
                         <div key={block.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl relative group/block hover:border-indigo-200 transition-colors">
-                          <div className="absolute -left-3 top-1/2 -translate-y-1/2 flex-col gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity hidden sm:flex">
+                          <div className="absolute -left-3 top-1/2 -translate-y-1/2 flex-col gap-1 sm:opacity-0 sm:group-hover/block:opacity-100 transition-opacity hidden sm:flex">
                             <button onClick={() => moveBlock(item.id, blockIndex, -1)} disabled={blockIndex === 0} className="p-1.5 bg-white shadow-sm border border-slate-200 hover:text-indigo-600 rounded-full text-slate-400 disabled:opacity-30 transition-colors"><ArrowUpIcon /></button>
                             <button onClick={() => moveBlock(item.id, blockIndex, 1)} disabled={blockIndex === item.blocks.length - 1} className="p-1.5 bg-white shadow-sm border border-slate-200 hover:text-indigo-600 rounded-full text-slate-400 disabled:opacity-30 transition-colors"><ArrowDownIcon /></button>
                           </div>
                           
-                          <div className="absolute top-2 right-2 opacity-0 group-hover/block:opacity-100 transition-opacity">
+                          <div className="absolute top-2 right-2 sm:opacity-0 sm:group-hover/block:opacity-100 transition-opacity">
                             <button onClick={() => removeBlock(item.id, block.id)} className="p-1.5 hover:bg-red-100 hover:text-red-600 rounded-md text-slate-400 transition-colors"><TrashIcon /></button>
                           </div>
                           
@@ -351,6 +555,10 @@ export default function SentenceBreakdown() {
                           <div className="mt-3 pl-1 sm:pl-4 flex items-center gap-2">
                             <input type="checkbox" id={`arrow-${block.id}`} checked={block.showTopArrow} onChange={(e) => updateBlock(item.id, block.id, 'showTopArrow', e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
                             <label htmlFor={`arrow-${block.id}`} className="text-xs font-medium text-slate-500 cursor-pointer select-none">แสดงลูกศร ↑ ชี้ Note</label>
+                            <div className="ml-auto flex gap-1 sm:hidden">
+                              <button onClick={() => moveBlock(item.id, blockIndex, -1)} disabled={blockIndex === 0} className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-500 disabled:opacity-25" aria-label="ย้ายคำขึ้น"><ArrowUpIcon /></button>
+                              <button onClick={() => moveBlock(item.id, blockIndex, 1)} disabled={blockIndex === item.blocks.length - 1} className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-500 disabled:opacity-25" aria-label="ย้ายคำลง"><ArrowDownIcon /></button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -372,11 +580,11 @@ export default function SentenceBreakdown() {
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="text-lg font-bold text-slate-800">ตัวอย่าง (Preview)</h2>
             <div className="flex gap-2 w-full sm:w-auto">
-              <button onClick={downloadImage} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer">
-                <DownloadIcon /> รูปภาพ
+              <button disabled={Boolean(exporting)} onClick={downloadImage} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-400 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer disabled:cursor-wait">
+                <DownloadIcon /> {exporting === "image" ? "กำลังสร้าง…" : "รูปภาพ"}
               </button>
-              <button onClick={downloadDocx} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer">
-                <DownloadIcon /> Word
+              <button disabled={Boolean(exporting)} onClick={downloadDocx} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer disabled:cursor-wait">
+                <DownloadIcon /> {exporting === "docx" ? "กำลังสร้าง…" : "Word"}
               </button>
             </div>
           </div>
