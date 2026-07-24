@@ -43,6 +43,60 @@ const normalizeItems = (value) => {
   }));
 };
 
+const escapeHtml = (value = "") =>
+  String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const buildGoogleDocsContent = (items) => {
+  const htmlItems = items.map((item) => {
+    const blockCells = (renderer) =>
+      item.blocks.map((block) =>
+        `<td style="text-align:center;padding:3px 8px;border:0;vertical-align:middle;">${renderer(block)}</td>`
+      ).join("");
+    const table = item.blocks.length > 0
+      ? `<table style="border-collapse:collapse;margin:8px 0 14px 0;">
+          <tbody>
+            <tr>${blockCells((block) => `<span style="font-size:13pt;">${escapeHtml(block.thai || "0")}</span>`)}</tr>
+            <tr>${blockCells((block) => block.thai ? '<span style="color:#d97706;">↑</span>' : "")}</tr>
+            <tr>${blockCells((block) => `<strong style="font-size:19pt;">${escapeHtml(block.hanzi)}</strong>`)}</tr>
+            <tr>${blockCells((block) => block.pinyin ? '<span style="color:#94a3b8;">↑</span>' : "")}</tr>
+            <tr>${blockCells((block) => `<span style="font-size:12pt;color:#475569;">${escapeHtml(block.pinyin)}</span>`)}</tr>
+          </tbody>
+        </table>`
+      : "";
+
+    return `<section style="margin:0 0 28px 0;font-family:Arial,'Noto Sans SC',sans-serif;">
+      <p style="font-size:16pt;font-weight:700;margin:0 0 6px 0;">${escapeHtml(item.sentence.index)}</p>
+      ${table}
+      ${item.sentence.hanzi ? `<p style="font-size:15pt;font-weight:700;margin:3px 0;">${escapeHtml(item.sentence.hanzi)}</p>` : ""}
+      ${item.sentence.pinyin ? `<p style="font-size:12pt;margin:3px 0;color:#475569;">${escapeHtml(item.sentence.pinyin)}</p>` : ""}
+      ${item.sentence.english ? `<p style="font-size:12pt;margin:3px 0;">${escapeHtml(item.sentence.english)}</p>` : ""}
+      ${item.sentence.thai ? `<p style="font-size:12pt;font-weight:600;margin:8px 0 3px 0;">${escapeHtml(item.sentence.thai)}</p>` : ""}
+    </section>`;
+  }).join("");
+
+  const html = `<div>${htmlItems}</div>`;
+  const text = items.map((item) => {
+    const words = item.blocks.map((block) =>
+      `${block.thai || "0"}\n↑\n${block.hanzi}\n↑\n${block.pinyin}`
+    ).join("\t");
+    return [
+      item.sentence.index,
+      words,
+      item.sentence.hanzi,
+      item.sentence.pinyin,
+      item.sentence.english,
+      item.sentence.thai
+    ].filter(Boolean).join("\n");
+  }).join("\n\n");
+
+  return { html, text };
+};
+
 // --- Icons ---
 const TrashIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
@@ -358,6 +412,35 @@ export default function SentenceBreakdown() {
     }
   };
 
+  const copyToGoogleDocs = async () => {
+    setExporting("gdocs");
+    try {
+      const { html, text } = buildGoogleDocsContent(items);
+      if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([text], { type: "text/plain" })
+          })
+        ]);
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
+
+      const docsWindow = window.open("https://docs.new", "_blank", "noopener,noreferrer");
+      setNotice(
+        docsWindow
+          ? "คัดลอกแล้ว — กด Ctrl+V ใน Google Docs เพื่อวาง"
+          : "คัดลอกแล้ว — เปิด Google Docs และกด Ctrl+V เพื่อวาง"
+      );
+    } catch (error) {
+      console.error("Failed to copy for Google Docs", error);
+      setNotice("คัดลอกไม่สำเร็จ กรุณาอนุญาตการเข้าถึงคลิปบอร์ด");
+    } finally {
+      setExporting("");
+    }
+  };
+
   const downloadDocx = async () => {
     setExporting("docx");
     try {
@@ -595,12 +678,15 @@ export default function SentenceBreakdown() {
         <div className="w-full lg:w-1/2 lg:sticky lg:top-8 flex flex-col gap-4">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="text-lg font-bold text-slate-800">ตัวอย่าง (Preview)</h2>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <button disabled={Boolean(exporting)} onClick={downloadImage} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-400 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer disabled:cursor-wait">
                 <DownloadIcon /> {exporting === "image" ? "กำลังสร้าง…" : "รูปภาพ"}
               </button>
               <button disabled={Boolean(exporting)} onClick={downloadDocx} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer disabled:cursor-wait">
                 <DownloadIcon /> {exporting === "docx" ? "กำลังสร้าง…" : "Word"}
+              </button>
+              <button disabled={Boolean(exporting)} onClick={copyToGoogleDocs} className="basis-full sm:basis-auto flex-1 sm:flex-none flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white px-4 py-2 rounded-xl font-semibold shadow-sm transition-colors text-sm cursor-pointer disabled:cursor-wait">
+                <CopyIcon /> {exporting === "gdocs" ? "กำลังคัดลอก…" : "Google Docs"}
               </button>
             </div>
           </div>
