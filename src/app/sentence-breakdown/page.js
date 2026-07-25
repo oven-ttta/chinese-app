@@ -69,8 +69,12 @@ const buildGoogleDocsContent = (items) => {
         chunk.map((block) =>
           `<td nowrap="nowrap" style="min-width:64px;text-align:center;white-space:nowrap;padding:2px 5px;border:0;vertical-align:middle;${extraStyle}">${renderer(block)}</td>`
         ).join("");
+      const hasTopNote = chunk.some((block) => block.topNote);
+      const hasTopArrow = chunk.some((block) => block.showTopArrow);
       return `<table cellpadding="0" cellspacing="0" border="0" style="border:0;border-collapse:collapse;table-layout:auto;margin:8px 0 12px 0;">
         <tbody>
+          ${hasTopNote ? `<tr>${cells((block) => `<span style="font-size:9pt;font-weight:600;white-space:nowrap;">${noWrap(block.topNote)}</span>`, "height:26px;")}</tr>` : ""}
+          ${hasTopArrow ? `<tr>${cells((block) => block.showTopArrow ? '<span style="font-size:9pt;color:#64748b;">↑</span>' : "", "height:14px;padding-top:0;padding-bottom:0;")}</tr>` : ""}
           <tr>${cells((block) => `<span style="font-size:9pt;font-weight:600;white-space:nowrap;">${noWrap(block.thai || "0")}</span>`, "height:26px;")}</tr>
           <tr>${cells((block) => block.thai ? '<span style="font-size:9pt;color:#d97706;">↑</span>' : "", "height:14px;padding-top:0;padding-bottom:0;")}</tr>
           <tr>${cells((block) => `<strong style="font-size:14pt;white-space:nowrap;">${noWrap(block.hanzi)}</strong>`, "height:28px;")}</tr>
@@ -92,13 +96,23 @@ const buildGoogleDocsContent = (items) => {
 
   const html = `<div>${htmlItems}</div>`;
   const text = items.map((item) => {
-    const words = chunkBlocks(item.blocks).map((chunk) => [
-      chunk.map((block) => block.thai || "0").join("\t"),
-      chunk.map(() => "↑").join("\t"),
-      chunk.map((block) => block.hanzi).join("\t"),
-      chunk.map((block) => block.pinyin ? "↑" : "").join("\t"),
-      chunk.map((block) => block.pinyin).join("\t")
-    ].join("\n")).join("\n\n");
+    const words = chunkBlocks(item.blocks).map((chunk) => {
+      const rows = [];
+      if (chunk.some((block) => block.topNote)) {
+        rows.push(chunk.map((block) => block.topNote || "").join("\t"));
+      }
+      if (chunk.some((block) => block.showTopArrow)) {
+        rows.push(chunk.map((block) => block.showTopArrow ? "↑" : "").join("\t"));
+      }
+      rows.push(
+        chunk.map((block) => block.thai || "0").join("\t"),
+        chunk.map((block) => block.thai ? "↑" : "").join("\t"),
+        chunk.map((block) => block.hanzi).join("\t"),
+        chunk.map((block) => block.pinyin ? "↑" : "").join("\t"),
+        chunk.map((block) => block.pinyin).join("\t")
+      );
+      return rows.join("\n");
+    }).join("\n\n");
     return [
       item.sentence.index,
       words,

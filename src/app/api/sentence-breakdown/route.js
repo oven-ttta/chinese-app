@@ -95,6 +95,30 @@ const analyzeSentence = async (sentence) => {
   const words = segmentChinese(sentence);
   if (words.length === 0) throw new Error("No Chinese words found");
 
+  const getCharacterBreakdown = async (word) => {
+    const characters = Array.from(word);
+    if (characters.length < 2) {
+      return { topNote: "", showTopArrow: false };
+    }
+
+    const meanings = await mapWithConcurrency(
+      characters,
+      4,
+      async (character) => {
+        if (NO_DIRECT_MEANING_WORDS.has(character)) return "0";
+        const result = await translate(character, "th");
+        return result.translatedText && result.translatedText !== character
+          ? result.translatedText
+          : "0";
+      }
+    );
+
+    return {
+      topNote: meanings.join(" + "),
+      showTopArrow: true
+    };
+  };
+
   const [thaiSentence, englishSentence, wordDetails] = await Promise.all([
     translate(sentence, "th", true),
     translate(sentence, "en"),
@@ -102,7 +126,10 @@ const analyzeSentence = async (sentence) => {
       words,
       6,
       async (word) => {
-        const result = await translate(word, "th", true);
+        const [result, characterBreakdown] = await Promise.all([
+          translate(word, "th", true),
+          getCharacterBreakdown(word)
+        ]);
         const hasDirectMeaning =
           !NO_DIRECT_MEANING_WORDS.has(word) &&
           result.translatedText &&
@@ -111,8 +138,7 @@ const analyzeSentence = async (sentence) => {
           hanzi: word,
           pinyin: result.pinyin,
           thai: hasDirectMeaning ? result.translatedText : "0",
-          topNote: "",
-          showTopArrow: false
+          ...characterBreakdown
         };
       }
     )
