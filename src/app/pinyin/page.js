@@ -60,6 +60,22 @@ const vowels = [
   { id: "ü", char: "ü", label: "อวี", speech: "鱼", audio: "yu2", color: "teal" },
 ];
 
+const toneColumns = [
+  { id: "tone-1", label: "เสียง 1", mark: "ˉ" },
+  { id: "tone-2", label: "เสียง 2", mark: "ˊ" },
+  { id: "tone-3", label: "เสียง 3", mark: "ˇ" },
+  { id: "tone-4", label: "เสียง 4", mark: "ˋ" },
+];
+
+const vowelToneRows = [
+  { vowel: "a", sounds: ["ā", "á", "ǎ", "à"] },
+  { vowel: "o", sounds: ["ō", "ó", "ǒ", "ò"] },
+  { vowel: "e", sounds: ["ē", "é", "ě", "è"] },
+  { vowel: "i", sounds: ["ī", "í", "ǐ", "ì"] },
+  { vowel: "u", sounds: ["ū", "ú", "ǔ", "ù"] },
+  { vowel: "ü", sounds: ["ǖ", "ǘ", "ǚ", "ǜ"] },
+];
+
 const finals = [
   { id: "final-a", char: "a", speech: "啊", audio: "a1" },
   { id: "final-o", char: "o", speech: "喔", audio: "o1" },
@@ -237,6 +253,59 @@ export default function PinyinPage() {
             <h2 className="text-xl sm:text-2xl font-bold text-slate-800">สระเดี่ยว <span className="text-slate-400 text-sm sm:text-base font-medium ml-1">(Simple Vowels)</span></h2>
           </div>
           {renderPinyinCards(vowels, "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4 md:gap-5")}
+        </section>
+
+        <section className="mb-10 overflow-hidden rounded-3xl border border-emerald-900/20 bg-emerald-950 shadow-sm">
+          <div className="flex flex-col gap-2 border-b border-white/10 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-8">
+            <div>
+              <h2 className="text-xl font-bold text-white sm:text-2xl">
+                สระผันวรรณยุกต์ <span className="ml-1 text-sm font-medium text-emerald-200 sm:text-base">(Tone-marked Vowels)</span>
+              </h2>
+              <p className="mt-1 text-xs text-emerald-100/70">กดตัวอักษรแต่ละตัวเพื่อฟังเสียง</p>
+            </div>
+            <span className="flex items-center gap-2 text-xs font-semibold text-emerald-100/80">
+              <SpeakerIcon /> มีเสียงครบทุกตัว
+            </span>
+          </div>
+
+          <div className="overflow-x-auto px-4 py-5 sm:px-8 sm:py-7">
+            <div className="mx-auto grid min-w-[520px] max-w-4xl grid-cols-[64px_repeat(4,minmax(90px,1fr))] gap-2 sm:gap-3">
+              <div aria-hidden="true" />
+              {toneColumns.map((tone) => (
+                <div key={tone.id} className="pb-2 text-center text-xs font-bold text-emerald-100/80 sm:text-sm">
+                  {tone.label} <span className="text-lg text-white">{tone.mark}</span>
+                </div>
+              ))}
+
+              {vowelToneRows.map((row) => [
+                <div key={`${row.vowel}-label`} className="flex items-center justify-center text-lg font-bold text-emerald-200">
+                  {row.vowel}
+                </div>,
+                ...row.sounds.map((sound, toneIndex) => {
+                  const id = `vowel-tone-${row.vowel}-${toneIndex + 1}`;
+                  const isActive = activeId === id;
+                  return (
+                    <button
+                      type="button"
+                      key={id}
+                      onClick={() => speakChinese(sound, id)}
+                      aria-label={`ฟังเสียง ${sound} ${toneColumns[toneIndex].label}`}
+                      className={`group relative flex min-h-16 items-center justify-center rounded-xl border text-4xl font-bold transition-all focus:outline-none focus:ring-4 focus:ring-emerald-300/40 sm:min-h-20 sm:text-5xl ${
+                        isActive
+                          ? "scale-[1.03] border-emerald-300 bg-emerald-700 text-white shadow-lg"
+                          : "border-white/10 bg-white/5 text-white hover:-translate-y-0.5 hover:border-emerald-300/60 hover:bg-white/10"
+                      }`}
+                    >
+                      {sound}
+                      <span className={`absolute right-2 top-2 transition-opacity ${isActive ? "animate-pulse text-emerald-200 opacity-100" : "text-emerald-100 opacity-0 group-hover:opacity-70"}`}>
+                        <SpeakerIcon />
+                      </span>
+                    </button>
+                  );
+                }),
+              ])}
+            </div>
+          </div>
         </section>
 
         <section className="mb-10 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
